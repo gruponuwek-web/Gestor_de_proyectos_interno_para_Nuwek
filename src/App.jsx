@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PROJECTS_INIT } from "./constants";
 import { generateId, todayStr } from "./utils/helpers";
 import { useProjects } from "./hooks/useProjects";
 import { useActivities } from "./hooks/useActivities";
 
-import ActivityForm  from "./components/forms/ActivityForm";
-import ProjectForm   from "./components/forms/ProjectForm";
-import Dashboard     from "./components/views/Dashboard";
-import CalendarView  from "./components/views/CalendarView";
-import GanttView     from "./components/views/GanttView";
+import ActivityForm   from "./components/forms/ActivityForm";
+import ProjectForm    from "./components/forms/ProjectForm";
+import Dashboard      from "./components/views/Dashboard";
+import CalendarView   from "./components/views/CalendarView";
+import GanttView      from "./components/views/GanttView";
 import ActivitiesList from "./components/views/ActivitiesList";
-import ProjectsView  from "./components/views/ProjectsView";
+import ProjectsView   from "./components/views/ProjectsView";
 
 const NAV = [
   { id: "proyectos",  label: "Proyectos",   icon: "◈" },
@@ -20,6 +20,27 @@ const NAV = [
   { id: "activities", label: "Actividades", icon: "☰" },
 ];
 
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function Toast({ message, type }) {
+  if (!message) return null;
+  const bg = type === "saving" ? "#1B4332" : "#16A34A";
+  const icon = type === "saving" ? "⏳" : "✅";
+  return (
+    <div style={{
+      position: "fixed", bottom: 28, right: 28, zIndex: 999,
+      background: bg, color: "#fff", borderRadius: 10,
+      padding: "12px 20px", fontSize: 13, fontWeight: 600,
+      display: "flex", alignItems: "center", gap: 8,
+      boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+      animation: "fadeIn 0.2s ease",
+    }}>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      {icon} {message}
+    </div>
+  );
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [view,            setView]            = useState("dashboard");
   const [selectedProject, setSelectedProject] = useState(PROJECTS_INIT[0]?.id || "");
@@ -27,15 +48,24 @@ export default function App() {
   const [showProjForm,    setShowProjForm]    = useState(false);
   const [editAct,         setEditAct]         = useState(null);
   const [editProj,        setEditProj]        = useState(null);
+  const [toast,           setToast]           = useState({ message: "", type: "" });
 
   const { projects, loading: projLoading, saveProject, deleteProject } = useProjects();
   const { activities, loading: actLoading, saveActivity, deleteActivity, updateStatus } = useActivities();
 
   const loading = projLoading || actLoading;
 
+  const showToast = useCallback((message, type = "success", duration = 2500) => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: "", type: "" }), duration);
+  }, []);
+
   const handleSaveAct = async (act) => {
+    const isNew = !act.id;
+    showToast("Guardando...", "saving", 60000);
     await saveActivity({ ...act, id: act.id || generateId() });
     setShowForm(false); setEditAct(null);
+    showToast(isNew ? "✅ Actividad creada" : "✅ Actividad actualizada", "success");
   };
 
   const handleEditAct = (act) => {
@@ -52,8 +82,11 @@ export default function App() {
   };
 
   const handleSaveProj = async (proj) => {
+    const isNew = !proj.id;
+    showToast("Guardando...", "saving", 60000);
     await saveProject({ ...proj, id: proj.id || generateId() });
     setShowProjForm(false); setEditProj(null);
+    showToast(isNew ? "✅ Proyecto creado" : "✅ Proyecto actualizado", "success");
   };
 
   if (loading) return (
@@ -126,8 +159,10 @@ export default function App() {
         {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onStatusChange={updateStatus} />}
       </div>
 
-      {showForm    && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); }} />}
-      {showProjForm && <ProjectForm editProject={editProj} onSave={handleSaveProj} onCancel={() => { setShowProjForm(false); setEditProj(null); }} />}
+      {showForm     && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); }} />}
+      {showProjForm && <ProjectForm  editProject={editProj} onSave={handleSaveProj} onCancel={() => { setShowProjForm(false); setEditProj(null); }} />}
+
+      <Toast message={toast.message} type={toast.type} />
     </div>
   );
 }
