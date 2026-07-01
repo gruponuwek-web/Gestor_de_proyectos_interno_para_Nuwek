@@ -13,7 +13,8 @@ export function useActivities() {
       try {
         const data = await fetchActividades();
         if (Array.isArray(data)) {
-          const normalized = data.map(a => ({ ...a, date: normalizeDate(a.date), originalDate: normalizeDate(a.originalDate) }));
+          const normalizeTime = v => !v ? "" : v.includes("T") ? new Date(v).toISOString().slice(11,16) : v.slice(0,5);
+          const normalized = data.map(a => ({ ...a, date: normalizeDate(a.date), originalDate: normalizeDate(a.originalDate), timeStart: normalizeTime(a.timeStart), timeEnd: normalizeTime(a.timeEnd) }));
           // Aplica cambios locales no confirmados encima de los datos de Sheets
           const merged = applyPending("activities", normalized);
           setActivities(merged);

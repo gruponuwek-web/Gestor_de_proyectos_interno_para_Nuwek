@@ -5,6 +5,24 @@ import StatusBadge from "../ui/StatusBadge";
 import FollowUpModal from "../modals/FollowUpModal";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
+function fmtDate(str) {
+  if (!str) return "";
+  const d = new Date(str + "T12:00:00");
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("es-MX", { day:"numeric", month:"short", ...(!sameYear && { year:"2-digit" }) });
+}
+
+function fmtTime(str) {
+  if (!str) return "";
+  // Si es ISO datetime (ej. "1899-12-30T16:06:36.000Z"), extrae solo HH:MM
+  if (str.includes("T")) {
+    const d = new Date(str);
+    return d.toISOString().slice(11, 16);
+  }
+  // Si ya es "HH:MM" o "HH:MM:SS", toma los primeros 5 chars
+  return str.slice(0, 5);
+}
+
 function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, onFollowUp, onDeleteOccurrence }) {
   const pr = projects.find(p=>p.id===act.projectId), pc = getPhaseColor(pr?.type, act.phase);
   const ng = (act.nuwekGuests||[]).length, cg = (act.clientGuests||[]).length;
@@ -21,7 +39,7 @@ function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, o
         <div style={{ display:"flex", flexWrap:"wrap", gap:"4px 12px", fontSize:12, color:"#9CA3AF" }}>
           <span style={{color:pr?.color||"#6B7280",fontWeight:600}}>{pr?.name}</span>
           <span style={{color:pc}}>· {act.phase}</span>
-          <span>· {act.date}{act.timeStart?` ${act.timeStart}${act.timeEnd?`–${act.timeEnd}`:""}`:""}</span>
+          <span>· {fmtDate(act.date)}{act.timeStart?` ${fmtTime(act.timeStart)}${act.timeEnd?`–${fmtTime(act.timeEnd)}`:""}`:""}</span>
           <span>· {act.modality} · {act.interactionType}</span>
           {act.nuwekResponsible&&<span>· 🟡 {act.nuwekResponsible}{ng?` +${ng}`:""}</span>}
           {act.clientResponsible&&<span>· 👤 {act.clientResponsible}{cg?` +${cg}`:""}</span>}
@@ -86,12 +104,15 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
     return a;
   },[allExpanded,fp,fph,fNuwek,fStatus,fType,q]);
 
+  const byDate  = (a, b) => (a.date||"").localeCompare(b.date||"") || (a.timeStart||"").localeCompare(b.timeStart||"");
+  const byDateD = (a, b) => -byDate(a, b);
+
   const groups = {
-    overdue:  filtered.filter(a=>a.date<today    && a.status!=="Completado"),
-    today:    filtered.filter(a=>a.date===today   && a.status!=="Completado"),
-    tomorrow: filtered.filter(a=>a.date===tmrwStr && a.status!=="Completado"),
-    upcoming: filtered.filter(a=>a.date>tmrwStr   && a.status!=="Completado"),
-    done:     filtered.filter(a=>a.status==="Completado"),
+    overdue:  filtered.filter(a=>a.date<today    && a.status!=="Completado").sort(byDateD),
+    today:    filtered.filter(a=>a.date===today   && a.status!=="Completado").sort(byDate),
+    tomorrow: filtered.filter(a=>a.date===tmrwStr && a.status!=="Completado").sort(byDate),
+    upcoming: filtered.filter(a=>a.date>tmrwStr   && a.status!=="Completado").sort(byDate),
+    done:     filtered.filter(a=>a.status==="Completado").sort(byDateD),
   };
 
   const sp=projects.find(p=>p.id===fp);
