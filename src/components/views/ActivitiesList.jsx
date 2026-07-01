@@ -3,6 +3,8 @@ import { STATUSES } from "../../constants";
 import { getPhasesForType, getPhaseColor, expandRecurring, todayStr, getStatusColor, getStatusBg, getPriorityColor } from "../../utils/helpers";
 import StatusBadge from "../ui/StatusBadge";
 import FollowUpModal from "../modals/FollowUpModal";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
 function ActivityRow({ act, projects, onEdit, onDelete, onStatusChange, onFollowUp }) {
   const pr = projects.find(p=>p.id===act.projectId), pc = getPhaseColor(pr?.type, act.phase);
@@ -33,7 +35,7 @@ function ActivityRow({ act, projects, onEdit, onDelete, onStatusChange, onFollow
           if(newStatus==="Completado") onFollowUp(act);
         }} />
         <button onClick={()=>onEdit(act)} title="Editar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#374151"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>✏️</button>
-        <button onClick={()=>{ const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id; if(window.confirm("¿Eliminar esta actividad?")) onDelete(baseId); }} title="Eliminar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#DC2626"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>🗑</button>
+        <button onClick={()=>{ const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id; setConfirmDelete({ id: baseId, name: act.description, isRecurring: act.recurrence && act.recurrence !== "No se repite", count: act.recurrenceCount || 12 }); }} title="Eliminar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#DC2626"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>🗑</button>
       </div>
     </div>
   );
@@ -66,6 +68,8 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onStatu
   const [fp,setFp]=useState("todos"), [fph,setFph]=useState("Todas"), [q,setQ]=useState("");
   const [fNuwek,setFNuwek]=useState("Todos"), [fStatus,setFStatus]=useState("Todos"), [fType,setFType]=useState("Todos");
   const [followUp,setFollowUp]=useState(null);
+  const [confirmDelete,setConfirmDelete]=useState(null);
+  const [confirmDelete,setConfirmDelete]=useState(null);
 
   const today = todayStr();
   const tmrw = new Date(); tmrw.setDate(tmrw.getDate()+1);
@@ -143,11 +147,29 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onStatu
       <GroupSection title="Próximas" acts={groups.upcoming} count={groups.upcoming.length} accent="#D97706" bg="#FFFBEB" icon="🗓" defaultOpen={false} projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
       <GroupSection title="Realizadas" acts={groups.done}   count={groups.done.length}    accent="#16A34A" bg="#F0FDF4" icon="✅" defaultOpen={false} projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
 
+      {confirmDelete && (
+        <ConfirmDeleteModal
+          activityName={confirmDelete.name}
+          isRecurring={confirmDelete.isRecurring}
+          recurrenceCount={confirmDelete.count}
+          onCancel={() => setConfirmDelete(null)}
+          onConfirm={() => { onDelete(confirmDelete.id); setConfirmDelete(null); }}
+        />
+      )}
       {followUp && (
         <FollowUpModal
           completedAct={followUp}
           onSkip={() => setFollowUp(null)}
           onSchedule={() => { onNew({ prefill: followUp }); setFollowUp(null); }}
+        />
+      )}
+      {confirmDelete && (
+        <ConfirmDeleteModal
+          activityName={confirmDelete.name}
+          isRecurring={confirmDelete.isRecurring}
+          recurrenceCount={confirmDelete.recurrenceCount}
+          onConfirm={() => { onDelete(confirmDelete.id); setConfirmDelete(null); }}
+          onCancel={() => setConfirmDelete(null)}
         />
       )}
     </div>
