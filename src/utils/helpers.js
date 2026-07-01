@@ -47,3 +47,15 @@ export function formatDateMX(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
 }
+
+// Normaliza cualquier formato de fecha a yyyy-MM-dd para inputs tipo date
+export function normalizeDate(val) {
+  if (!val) return "";
+  if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}

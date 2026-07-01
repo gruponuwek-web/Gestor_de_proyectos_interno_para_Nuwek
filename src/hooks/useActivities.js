@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchActividades, upsertActividad, removeActividad } from "../api/sheets";
 import { localGet, localSet, KEYS } from "../utils/storage";
+import { normalizeDate } from "../utils/helpers";
 
 export function useActivities() {
   const [activities, setActivities] = useState([]);
@@ -12,8 +13,9 @@ export function useActivities() {
       try {
         const data = await fetchActividades();
         if (Array.isArray(data)) {
-          setActivities(data);
-          localSet(KEYS.ACTIVITIES, data);
+          const normalized = data.map(a => ({ ...a, date: normalizeDate(a.date), originalDate: normalizeDate(a.originalDate) }));
+          setActivities(normalized);
+          localSet(KEYS.ACTIVITIES, normalized);
         }
       } catch (e) {
         setError(e.message);

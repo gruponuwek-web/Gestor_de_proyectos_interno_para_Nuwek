@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { PROJECTS_INIT } from "../constants";
 import { fetchProyectos, upsertProyecto, removeProyecto } from "../api/sheets";
 import { localGet, localSet, KEYS } from "../utils/storage";
+import { normalizeDate } from "../utils/helpers";
 
 export function useProjects() {
   const [projects, setProjects] = useState(PROJECTS_INIT);
@@ -13,8 +14,9 @@ export function useProjects() {
       try {
         const data = await fetchProyectos();
         if (Array.isArray(data) && data.length > 0) {
-          setProjects(data);
-          localSet(KEYS.PROJECTS, data);
+          const normalized = data.map(p => ({ ...p, startDate: normalizeDate(p.startDate), billingDate: normalizeDate(p.billingDate) }));
+          setProjects(normalized);
+          localSet(KEYS.PROJECTS, normalized);
         } else {
           // Sheets vacío → usar fallback local o PROJECTS_INIT
           const local = localGet(KEYS.PROJECTS);
