@@ -28,4 +28,4 @@ export const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Juli
 export const COLOR_OPTIONS = ["#7C3AED","#D97706","#059669","#DC2626","#0EA5E9","#EC4899","#F59E0B","#6366F1","#14B8A6","#84CC16"];
 export const NUWEK_TEAM_DEFAULT = ["Carlos","Jaime","Daniel","Yun","Estrella"];
 
-export const SHEETS_URL = "https://script.google.com/macros/s/AKfycbz2q55bSD1qHolBc3Qrezar9oTJeODV_Qdg2Ei3OcN86xG3EI3kEgGGg5dU0xKcfV8C/exec";
+export const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw9CC6MFOE5Q9v_JBJ5QTBUFOLaYh6s1WOAvxYNhC88VbK0gM7oKmsOylmuJk1QEVg/exec";
