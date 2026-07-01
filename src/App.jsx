@@ -65,7 +65,7 @@ export default function App() {
     showToast("Guardando en Sheets...", "saving", 60000);
     await saveActivity({ ...act, id: act.id || generateId() });
     showToast(isNew ? "Actividad creada" : "Actividad actualizada", "success");
-    setTimeout(() => { setShowForm(false); setEditAct(null); }, 1500);
+    setTimeout(() => { setShowForm(false); setEditAct(null); }, 300);
   };
 
   const handleEditAct = (act) => {
@@ -86,7 +86,7 @@ export default function App() {
     showToast("Guardando en Sheets...", "saving", 60000);
     await saveProject({ ...proj, id: proj.id || generateId() });
     showToast(isNew ? "Proyecto creado" : "Proyecto actualizado", "success");
-    setTimeout(() => { setShowProjForm(false); setEditProj(null); }, 1500);
+    setTimeout(() => { setShowProjForm(false); setEditProj(null); }, 300);
   };
 
   if (loading) return (
