@@ -10,6 +10,7 @@ async function sheetsGet(entity) {
 async function sheetsPost(entity, body) {
   const res  = await fetch(`${SHEETS_URL}?entity=${entity}&method=POST`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const json = await res.json();

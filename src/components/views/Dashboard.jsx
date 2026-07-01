@@ -1,19 +1,17 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { MONTHS_ES } from "../../constants";
-import { getPhasesForType, getPhaseColor, expandRecurring, todayStr, getStatusColor, getStatusBg, getPriorityColor } from "../../utils/helpers";
+import { useMemo } from "react";
+import { getPhasesForType, expandRecurring, todayStr, tomorrowStr, getStatusColor, getStatusBg, getPriorityColor } from "../../utils/helpers";
 import Badge from "../ui/Badge";
 
 function Dashboard({ projects, activities, onNewActivity, onEdit }) {
   const today = todayStr();
-  const tmrw = new Date(); tmrw.setDate(tmrw.getDate()+1);
-  const tmrwStr = tmrw.toISOString().split("T")[0];
+  const tmrwStr = tomorrowStr();
   const all = useMemo(() => activities.flatMap(expandRecurring), [activities]);
   const todayActs  = all.filter(a => a.date===today    && a.status!=="Completado");
   const tmrwActs   = all.filter(a => a.date===tmrwStr  && a.status!=="Completado");
   const overdueActs= all.filter(a => a.date<today      && a.status!=="Completado");
 
   function getPhaseProgress(proj) {
-    const pa = activities.filter(a => a.projectId===proj.id);
+    const pa = all.filter(a => a.projectId===proj.id);
     return getPhasesForType(proj.type).map(ph => {
       const pha = pa.filter(a => a.phase===ph.name);
       const done=pha.filter(a=>a.status==="Completado").length, total=pha.length;
@@ -75,8 +73,8 @@ function Dashboard({ projects, activities, onNewActivity, onEdit }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16 }}>
         {projects.map(proj => {
           const phases = getPhaseProgress(proj);
-          const total = activities.filter(a=>a.projectId===proj.id).length;
-          const done  = activities.filter(a=>a.projectId===proj.id&&a.status==="Completado").length;
+          const total = all.filter(a=>a.projectId===proj.id).length;
+          const done  = all.filter(a=>a.projectId===proj.id&&a.status==="Completado").length;
           const pct   = total>0?Math.round(done/total*100):0;
           return (
             <div key={proj.id} style={{ background:"#fff", borderRadius:12, padding:24, border:"1px solid #F3F4F6", boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>

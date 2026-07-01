@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState } from "react";
 import { getPhasesForType } from "../../utils/helpers";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
 function ProjectsView({ projects, activities, onAdd, onEdit, onDelete, onGoGantt }) {
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const STATUS_COLOR = { "Activo":"#16A34A","En pausa":"#D97706","Completado":"#6B7280" };
   const STATUS_BG    = { "Activo":"#F0FDF4","En pausa":"#FFFBEB","Completado":"#F9FAFB" };
 
@@ -107,17 +109,24 @@ function ProjectsView({ projects, activities, onAdd, onEdit, onDelete, onGoGantt
                 <div style={{display:"flex",gap:8,borderTop:"1px solid #F9FAFB",paddingTop:14}}>
                   <button onClick={()=>onGoGantt(proj.id)} style={{flex:1,padding:"8px 0",background:"#F9FAFB",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,color:"#374151",cursor:"pointer"}}>Ver Gantt</button>
                   <button onClick={()=>onEdit(proj)} style={{flex:1,padding:"8px 0",background:"#F9FAFB",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,color:"#374151",cursor:"pointer"}}>✏️ Editar</button>
-                  <button onClick={()=>{ if(window.confirm(`¿Eliminar ${proj.name}?`)) onDelete(proj.id); }} style={{padding:"8px 12px",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,fontSize:12,fontWeight:600,color:"#DC2626",cursor:"pointer"}}>🗑</button>
+                  <button onClick={()=>setConfirmDelete({ id: proj.id, name: proj.name })} style={{padding:"8px 12px",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,fontSize:12,fontWeight:600,color:"#DC2626",cursor:"pointer"}}>🗑</button>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+      {confirmDelete && (
+        <ConfirmDeleteModal
+          activityName={confirmDelete.name}
+          isRecurring={false}
+          entityLabel="proyecto"
+          onCancel={() => setConfirmDelete(null)}
+          onConfirm={() => { onDelete(confirmDelete.id); setConfirmDelete(null); }}
+        />
+      )}
     </div>
   );
 }
-
-// ─── APP ──────────────────────────────────────────────────────────────────────
 
 export default ProjectsView;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { PRIORITIES, STATUSES, MODALITIES, INTERACTION_TYPES, RECURRENCE_OPTIONS } from "../../constants";
 import { getPhasesForType, getStatusColor, getStatusBg, todayStr, generateId } from "../../utils/helpers";
 import MultiSelect from "../ui/MultiSelect";
@@ -156,7 +156,7 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
         {/* Footer */}
         <div style={{ padding:"16px 24px", borderTop:"1px solid #F3F4F6", display:"flex", justifyContent:"flex-end", gap:10 }}>
           <button onClick={onCancel} style={{ padding:"9px 18px", borderRadius:8, border:"1px solid #E5E7EB", background:"#fff", color:"#374151", fontSize:13, cursor:"pointer", fontWeight:500 }}>Cancelar</button>
-          <button onClick={() => { if(!form.description||!form.date) return; onSave({...form, id:form.id||generateId()}); }}
+          <button onClick={() => { if(!form.description||!form.date||!form.projectId||!form.phase) return; onSave({...form, id:form.id||generateId()}); }}
             style={{ padding:"9px 20px", borderRadius:8, border:"none", background:"#1B4332", color:"#fff", fontSize:13, cursor:"pointer", fontWeight:600 }}>Guardar</button>
         </div>
       </div>

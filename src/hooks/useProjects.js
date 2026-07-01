@@ -38,14 +38,14 @@ export function useProjects() {
       : [...projects, proj];
     setProjects(updated);
     localSet(KEYS.PROJECTS, updated);
-    try { await upsertProyecto(proj); } catch {}
+    await upsertProyecto(proj);
   };
 
   const deleteProject = async (id) => {
     const updated = projects.filter(p => p.id !== id);
     setProjects(updated);
     localSet(KEYS.PROJECTS, updated);
-    try { await removeProyecto(id); } catch {}
+    await removeProyecto(id);
   };
 
   return { projects, loading, error, saveProject, deleteProject };

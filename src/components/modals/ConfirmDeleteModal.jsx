@@ -1,4 +1,4 @@
-export default function ConfirmDeleteModal({ activityName, isRecurring, recurrenceCount, onConfirm, onCancel }) {
+export default function ConfirmDeleteModal({ activityName, isRecurring, recurrenceCount, onConfirm, onCancel, entityLabel = "actividad" }) {
   return (
     <div style={{ position:"fixed", inset:0, zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(0,0,0,0.45)", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
       <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, width:"100%", maxWidth:380, overflow:"hidden", boxShadow:"0 20px 60px rgba(0,0,0,0.15)" }}>
@@ -9,7 +9,7 @@ export default function ConfirmDeleteModal({ activityName, isRecurring, recurren
           <div style={{ width:42, height:42, borderRadius:"50%", background:"#FEE2E2", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12 }}>
             <span style={{ fontSize:20 }}>🗑</span>
           </div>
-          <p style={{ fontSize:15, fontWeight:700, color:"#111827", margin:"0 0 6px" }}>Eliminar actividad</p>
+          <p style={{ fontSize:15, fontWeight:700, color:"#111827", margin:"0 0 6px" }}>Eliminar {entityLabel}</p>
           <p style={{ fontSize:13, color:"#6B7280", margin:"0 0 16px", lineHeight:1.6 }}>
             ¿Eliminar <span style={{ color:"#111827", fontWeight:600 }}>"{activityName}"</span>?<br/>
             Esta acción no se puede deshacer.

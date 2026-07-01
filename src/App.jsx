@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { PROJECTS_INIT } from "./constants";
 import { generateId, todayStr } from "./utils/helpers";
 import { useProjects } from "./hooks/useProjects";
@@ -23,8 +23,8 @@ const NAV = [
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 function Toast({ message, type }) {
   if (!message) return null;
-  const bg = type === "saving" ? "#1B4332" : "#16A34A";
-  const icon = type === "saving" ? "⏳" : "✅";
+  const bg   = type === "saving" ? "#1B4332" : type === "error" ? "#DC2626" : "#16A34A";
+  const icon = type === "saving" ? "⏳"       : type === "error" ? "❌"       : "✅";
   return (
     <div style={{
       position: "fixed", bottom: 28, right: 28, zIndex: 999,
@@ -49,6 +49,7 @@ export default function App() {
   const [editAct,         setEditAct]         = useState(null);
   const [editProj,        setEditProj]        = useState(null);
   const [toast,           setToast]           = useState({ message: "", type: "" });
+  const toastTimer = useRef(null);
 
   const { projects, loading: projLoading, saveProject, deleteProject } = useProjects();
   const { activities, loading: actLoading, saveActivity, deleteActivity, updateStatus } = useActivities();
@@ -56,15 +57,20 @@ export default function App() {
   const loading = projLoading || actLoading;
 
   const showToast = useCallback((message, type = "success", duration = 2500) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ message, type });
-    setTimeout(() => setToast({ message: "", type: "" }), duration);
+    toastTimer.current = setTimeout(() => setToast({ message: "", type: "" }), duration);
   }, []);
 
   const handleSaveAct = async (act) => {
     const isNew = !act.id;
     showToast("Guardando en Sheets...", "saving", 60000);
-    await saveActivity({ ...act, id: act.id || generateId() });
-    showToast(isNew ? "Actividad creada" : "Actividad actualizada", "success");
+    try {
+      await saveActivity({ ...act, id: act.id || generateId() });
+      showToast(isNew ? "Actividad creada" : "Actividad actualizada", "success");
+    } catch {
+      showToast("Guardado local · Error al sincronizar con Sheets", "error");
+    }
     setTimeout(() => { setShowForm(false); setEditAct(null); }, 300);
   };
 
@@ -84,8 +90,12 @@ export default function App() {
   const handleSaveProj = async (proj) => {
     const isNew = !proj.id;
     showToast("Guardando en Sheets...", "saving", 60000);
-    await saveProject({ ...proj, id: proj.id || generateId() });
-    showToast(isNew ? "Proyecto creado" : "Proyecto actualizado", "success");
+    try {
+      await saveProject({ ...proj, id: proj.id || generateId() });
+      showToast(isNew ? "Proyecto creado" : "Proyecto actualizado", "success");
+    } catch {
+      showToast("Guardado local · Error al sincronizar con Sheets", "error");
+    }
     setTimeout(() => { setShowProjForm(false); setEditProj(null); }, 300);
   };
 

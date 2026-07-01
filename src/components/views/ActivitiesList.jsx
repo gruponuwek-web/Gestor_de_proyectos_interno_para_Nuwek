@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { STATUSES } from "../../constants";
-import { getPhasesForType, getPhaseColor, expandRecurring, todayStr, getStatusColor, getStatusBg, getPriorityColor } from "../../utils/helpers";
+import { getPhasesForType, getPhaseColor, expandRecurring, todayStr, tomorrowStr, getStatusColor, getStatusBg, getPriorityColor } from "../../utils/helpers";
 import StatusBadge from "../ui/StatusBadge";
 import FollowUpModal from "../modals/FollowUpModal";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
@@ -30,7 +30,8 @@ function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, o
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
         <StatusBadge status={act.status} onChange={newStatus => {
-          onStatusChange(act.id, newStatus);
+          const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id;
+          onStatusChange(baseId, newStatus);
           if(newStatus==="Completado") onFollowUp(act);
         }} />
         <button onClick={()=>onEdit(act)} title="Editar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#374151"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>✏️</button>
@@ -70,8 +71,7 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onStatu
   const [confirmDelete,setConfirmDelete]=useState(null);
 
   const today = todayStr();
-  const tmrw = new Date(); tmrw.setDate(tmrw.getDate()+1);
-  const tmrwStr = tmrw.toISOString().split("T")[0];
+  const tmrwStr = tomorrowStr();
 
   const allExpanded = useMemo(()=>activities.flatMap(expandRecurring),[activities]);
 

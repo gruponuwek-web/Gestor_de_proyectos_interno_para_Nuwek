@@ -33,14 +33,14 @@ export function useActivities() {
       : [...activities, act];
     setActivities(updated);
     localSet(KEYS.ACTIVITIES, updated);
-    try { await upsertActividad(act); } catch {}
+    await upsertActividad(act);
   };
 
   const deleteActivity = async (id) => {
     const updated = activities.filter(a => a.id !== id);
     setActivities(updated);
     localSet(KEYS.ACTIVITIES, updated);
-    try { await removeActividad(id); } catch {}
+    await removeActividad(id);
   };
 
   const updateStatus = async (id, newStatus) => {
