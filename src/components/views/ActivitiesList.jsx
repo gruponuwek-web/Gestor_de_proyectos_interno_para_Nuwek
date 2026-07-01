@@ -4,9 +4,8 @@ import { getPhasesForType, getPhaseColor, expandRecurring, todayStr, getStatusCo
 import StatusBadge from "../ui/StatusBadge";
 import FollowUpModal from "../modals/FollowUpModal";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
-import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
-function ActivityRow({ act, projects, onEdit, onDelete, onStatusChange, onFollowUp }) {
+function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, onFollowUp }) {
   const pr = projects.find(p=>p.id===act.projectId), pc = getPhaseColor(pr?.type, act.phase);
   const ng = (act.nuwekGuests||[]).length, cg = (act.clientGuests||[]).length;
   return (
@@ -35,13 +34,13 @@ function ActivityRow({ act, projects, onEdit, onDelete, onStatusChange, onFollow
           if(newStatus==="Completado") onFollowUp(act);
         }} />
         <button onClick={()=>onEdit(act)} title="Editar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#374151"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>✏️</button>
-        <button onClick={()=>{ const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id; setConfirmDelete({ id: baseId, name: act.description, isRecurring: act.recurrence && act.recurrence !== "No se repite", count: act.recurrenceCount || 12 }); }} title="Eliminar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#DC2626"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>🗑</button>
+        <button onClick={()=>{ const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id; onConfirmDelete({ id: baseId, name: act.description, isRecurring: act.recurrence && act.recurrence !== "No se repite", count: act.recurrenceCount || 12 }); }} title="Eliminar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#DC2626"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>🗑</button>
       </div>
     </div>
   );
 }
 
-function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, projects, onEdit, onDelete, onStatusChange, onFollowUp }) {
+function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, projects, onEdit, onConfirmDelete, onStatusChange, onFollowUp }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ marginBottom:16 }}>
@@ -56,7 +55,7 @@ function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, 
         <div style={{ border:`1px solid ${accent}22`, borderTop:"none", borderRadius:"0 0 10px 10px", padding:"12px 12px 6px" }}>
           {acts.length===0
             ? <p style={{ margin:0, textAlign:"center", color:"#D1D5DB", fontSize:12, padding:"16px 0" }}>Sin actividades aquí</p>
-            : acts.map(a => <ActivityRow key={a.id} act={a} projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={onFollowUp} />)
+            : acts.map(a => <ActivityRow key={a.id} act={a} projects={projects} onEdit={onEdit} onConfirmDelete={onConfirmDelete} onStatusChange={onStatusChange} onFollowUp={onFollowUp} />)
           }
         </div>
       )}
@@ -68,7 +67,6 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onStatu
   const [fp,setFp]=useState("todos"), [fph,setFph]=useState("Todas"), [q,setQ]=useState("");
   const [fNuwek,setFNuwek]=useState("Todos"), [fStatus,setFStatus]=useState("Todos"), [fType,setFType]=useState("Todos");
   const [followUp,setFollowUp]=useState(null);
-  const [confirmDelete,setConfirmDelete]=useState(null);
   const [confirmDelete,setConfirmDelete]=useState(null);
 
   const today = todayStr();
@@ -141,11 +139,11 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onStatu
       </div>
 
       {/* Groups */}
-      <GroupSection title="Vencidas" acts={groups.overdue}  count={groups.overdue.length}  accent="#DC2626" bg="#FEF2F2" icon="⚠️" defaultOpen={true}  projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
-      <GroupSection title="Hoy"      acts={groups.today}    count={groups.today.length}    accent="#2563EB" bg="#EFF6FF" icon="📋" defaultOpen={true}  projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
-      <GroupSection title="Mañana"   acts={groups.tomorrow} count={groups.tomorrow.length} accent="#7C3AED" bg="#F5F3FF" icon="📅" defaultOpen={true}  projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
-      <GroupSection title="Próximas" acts={groups.upcoming} count={groups.upcoming.length} accent="#D97706" bg="#FFFBEB" icon="🗓" defaultOpen={false} projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
-      <GroupSection title="Realizadas" acts={groups.done}   count={groups.done.length}    accent="#16A34A" bg="#F0FDF4" icon="✅" defaultOpen={false} projects={projects} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
+      <GroupSection title="Vencidas" acts={groups.overdue}  count={groups.overdue.length}  accent="#DC2626" bg="#FEF2F2" icon="⚠️" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
+      <GroupSection title="Hoy"      acts={groups.today}    count={groups.today.length}    accent="#2563EB" bg="#EFF6FF" icon="📋" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
+      <GroupSection title="Mañana"   acts={groups.tomorrow} count={groups.tomorrow.length} accent="#7C3AED" bg="#F5F3FF" icon="📅" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
+      <GroupSection title="Próximas" acts={groups.upcoming} count={groups.upcoming.length} accent="#D97706" bg="#FFFBEB" icon="🗓" defaultOpen={false} projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
+      <GroupSection title="Realizadas" acts={groups.done}   count={groups.done.length}    accent="#16A34A" bg="#F0FDF4" icon="✅" defaultOpen={false} projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} />
 
       {confirmDelete && (
         <ConfirmDeleteModal
@@ -163,15 +161,7 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onStatu
           onSchedule={() => { onNew({ prefill: followUp }); setFollowUp(null); }}
         />
       )}
-      {confirmDelete && (
-        <ConfirmDeleteModal
-          activityName={confirmDelete.name}
-          isRecurring={confirmDelete.isRecurring}
-          recurrenceCount={confirmDelete.recurrenceCount}
-          onConfirm={() => { onDelete(confirmDelete.id); setConfirmDelete(null); }}
-          onCancel={() => setConfirmDelete(null)}
-        />
-      )}
+
     </div>
   );
 }
