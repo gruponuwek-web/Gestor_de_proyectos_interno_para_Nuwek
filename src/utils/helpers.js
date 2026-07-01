@@ -34,13 +34,17 @@ export function tomorrowStr() {
 
 export function expandRecurring(act) {
   if (!act.recurrence || act.recurrence === "No se repite") return [act];
+  if (!act.date) return [act];
   const gap = { Semanal: 7, Quincenal: 14, Mensual: 30 }[act.recurrence] || 7;
   const count = parseInt(act.recurrenceCount) || 12;
+  const excluded = new Set(act.excludeDates || []);
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(act.date);
     d.setDate(d.getDate() + i * gap);
-    return { ...act, id: `${act.id}_${i}`, date: d.toISOString().split("T")[0], isChild: i > 0 };
-  });
+    const date = d.toISOString().split("T")[0];
+    if (excluded.has(date)) return null;
+    return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0 };
+  }).filter(Boolean);
 }
 
 export function getStatusColor(s) {

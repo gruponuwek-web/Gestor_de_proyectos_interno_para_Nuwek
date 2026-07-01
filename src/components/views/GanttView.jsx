@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { STATUSES } from "../../constants";
 import { getPhasesForType, getPhaseColor, getStatusColor } from "../../utils/helpers";
 
@@ -11,10 +11,10 @@ function GanttView({ projects, activities, selectedProject, onProjectChange }) {
   const proj  = projects.find(p=>p.id===pid);
   const phases= proj?getPhasesForType(proj.type):[];
   const acts  = useMemo(()=>{
-    let a=activities.filter(x=>x.projectId===pid);
+    let a=activities.filter(x=>x.projectId===pid && x.date);
     if(fPhase!=="Todas")a=a.filter(x=>x.phase===fPhase);
     if(fStat !=="Todos")a=a.filter(x=>x.status===fStat);
-    return a.sort((a,b)=>a.date.localeCompare(b.date));
+    return a.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
   },[activities,pid,fPhase,fStat]);
 
   const dates=acts.map(a=>a.date).filter(Boolean);

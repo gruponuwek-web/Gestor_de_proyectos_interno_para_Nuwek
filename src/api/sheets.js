@@ -1,28 +1,43 @@
 import { SHEETS_URL } from "../constants";
 
+async function withRetry(fn, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); }
+    catch (e) {
+      if (i === attempts - 1) throw e;
+      await new Promise(r => setTimeout(r, 600 * (i + 1)));
+    }
+  }
+}
+
 async function sheetsGet(entity) {
-  const res  = await fetch(`${SHEETS_URL}?entity=${entity}`);
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error);
-  return json.data;
+  return withRetry(async () => {
+    const res  = await fetch(`${SHEETS_URL}?entity=${entity}`);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+    return json.data;
+  });
 }
 
 async function sheetsPost(entity, body) {
-  const res  = await fetch(`${SHEETS_URL}?entity=${entity}&method=POST`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+  return withRetry(async () => {
+    const res  = await fetch(`${SHEETS_URL}?entity=${entity}&method=POST`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+    return json.data;
   });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error);
-  return json.data;
 }
 
 async function sheetsDelete(entity, id) {
-  const res  = await fetch(`${SHEETS_URL}?entity=${entity}&method=DELETE&id=${id}`);
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error);
-  return json.data;
+  return withRetry(async () => {
+    const res  = await fetch(`${SHEETS_URL}?entity=${entity}&method=DELETE&id=${id}`);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+    return json.data;
+  });
 }
 
 // ── Proyectos ─────────────────────────────────────────────────────────────────

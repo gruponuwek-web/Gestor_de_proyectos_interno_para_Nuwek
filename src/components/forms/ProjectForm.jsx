@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { COLOR_OPTIONS, NUWEK_TEAM_DEFAULT } from "../../constants";
 import { generateId } from "../../utils/helpers";
 import MemberInput from "../ui/MemberInput";
@@ -11,13 +11,24 @@ function ProjectForm({ editProject, onSave, onCancel }) {
     billingAmount:"", billingDate:"", billingNotes:"",
     status:"Activo"
   };
+  const initial = useRef(editProject || blank);
   const [form, setForm] = useState(editProject || blank);
+  const [submitted, setSubmitted] = useState(false);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const inp = {width:"100%",background:"#fff",border:"1px solid #E5E7EB",borderRadius:8,padding:"9px 12px",fontSize:13,color:"#111827",outline:"none",boxSizing:"border-box"};
   const lbl = {display:"block",fontSize:11,fontWeight:600,color:"#6B7280",marginBottom:5,textTransform:"uppercase",letterSpacing:"0.04em"};
 
+  const nameError = submitted && !form.name.trim();
+
+  const handleCancel = () => {
+    const dirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+    if (dirty && !window.confirm("¿Descartar cambios sin guardar?")) return;
+    onCancel();
+  };
+
   const handleSave = () => {
-    if(!form.name.trim()) return;
+    setSubmitted(true);
+    if (!form.name.trim()) return;
     onSave({...form, id: form.id || generateId()});
   };
 
@@ -26,7 +37,7 @@ function ProjectForm({ editProject, onSave, onCancel }) {
       <div style={{background:"#fff",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
         <div style={{padding:"20px 24px",borderBottom:"1px solid #F3F4F6",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <h2 style={{margin:0,fontSize:17,fontWeight:700,color:"#111827"}}>{editProject?"Editar proyecto":"Nuevo proyecto"}</h2>
-          <button onClick={onCancel} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#9CA3AF"}}>✕</button>
+          <button onClick={handleCancel} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#9CA3AF"}}>✕</button>
         </div>
         <div style={{padding:24,display:"flex",flexDirection:"column",gap:18}}>
 
@@ -34,7 +45,8 @@ function ProjectForm({ editProject, onSave, onCancel }) {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
             <div>
               <label style={lbl}>Nombre del proyecto *</label>
-              <input style={inp} value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Ej. HULUX" />
+              <input style={{...inp, borderColor: nameError ? "#DC2626" : "#E5E7EB"}} value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Ej. HULUX" />
+              {nameError && <p style={{margin:"4px 0 0",fontSize:11,color:"#DC2626"}}>Campo requerido</p>}
             </div>
             <div>
               <label style={lbl}>Metodología</label>
@@ -103,7 +115,7 @@ function ProjectForm({ editProject, onSave, onCancel }) {
 
         </div>
         <div style={{padding:"16px 24px",borderTop:"1px solid #F3F4F6",display:"flex",justifyContent:"flex-end",gap:10}}>
-          <button onClick={onCancel} style={{padding:"9px 18px",borderRadius:8,border:"1px solid #E5E7EB",background:"#fff",color:"#374151",fontSize:13,cursor:"pointer",fontWeight:500}}>Cancelar</button>
+          <button onClick={handleCancel} style={{padding:"9px 18px",borderRadius:8,border:"1px solid #E5E7EB",background:"#fff",color:"#374151",fontSize:13,cursor:"pointer",fontWeight:500}}>Cancelar</button>
           <button onClick={handleSave} style={{padding:"9px 20px",borderRadius:8,border:"none",background:"#1B4332",color:"#fff",fontSize:13,cursor:"pointer",fontWeight:700}}>Guardar proyecto</button>
         </div>
       </div>

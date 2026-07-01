@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PRIORITIES, STATUSES, MODALITIES, INTERACTION_TYPES, RECURRENCE_OPTIONS } from "../../constants";
 import { getPhasesForType, getStatusColor, getStatusBg, todayStr, generateId } from "../../utils/helpers";
 import MultiSelect from "../ui/MultiSelect";
@@ -12,10 +12,32 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
     recurrence:"No se repite", recurrenceCount:12,
     status:"Pendiente", notes:"", originalDate:""
   };
+  const initial = useRef(editActivity || blank);
   const [form, setForm] = useState(editActivity || blank);
+  const [submitted, setSubmitted] = useState(false);
   const project = projects.find(p => p.id === form.projectId);
   const phases = project ? getPhasesForType(project.type) : [];
   const set = (k,v) => setForm(f => ({ ...f, [k]:v }));
+
+  const errors = {
+    description: !form.description.trim(),
+    date: !form.date,
+    projectId: !form.projectId,
+    phase: !form.phase,
+  };
+  const hasErrors = Object.values(errors).some(Boolean);
+
+  const handleCancel = () => {
+    const dirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+    if (dirty && !window.confirm("¿Descartar cambios sin guardar?")) return;
+    onCancel();
+  };
+
+  const handleSave = () => {
+    setSubmitted(true);
+    if (hasErrors) return;
+    onSave({...form, id: form.id || generateId()});
+  };
 
   useEffect(() => {
     if (project && phases.length && !phases.find(p => p.name === form.phase))
@@ -34,7 +56,7 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
         {/* Header */}
         <div style={{ padding:"20px 24px", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <h2 style={{ margin:0, fontSize:17, fontWeight:700, color:"#111827" }}>{editActivity ? "Editar actividad" : "Nueva actividad"}</h2>
-          <button onClick={onCancel} style={{ background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#9CA3AF", lineHeight:1 }}>✕</button>
+          <button onClick={handleCancel} style={{ background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#9CA3AF", lineHeight:1 }}>✕</button>
         </div>
         {/* Body */}
         <div style={{ padding:24, display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -61,7 +83,8 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
 
           <div style={{ gridColumn:"1/-1" }}>
             <label style={lbl}>Descripción *</label>
-            <input style={inp} value={form.description} onChange={e => set("description", e.target.value)} placeholder="¿Qué se va a hacer?" />
+            <input style={{ ...inp, borderColor: submitted && errors.description ? "#DC2626" : "#E5E7EB" }} value={form.description} onChange={e => set("description", e.target.value)} placeholder="¿Qué se va a hacer?" />
+            {submitted && errors.description && <p style={{ margin:"4px 0 0", fontSize:11, color:"#DC2626" }}>Campo requerido</p>}
           </div>
 
           <div>
@@ -94,7 +117,8 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
 
           <div>
             <label style={lbl}>Fecha *</label>
-            <input type="date" style={inp} value={form.date} onChange={e => set("date", e.target.value)} />
+            <input type="date" style={{ ...inp, borderColor: submitted && errors.date ? "#DC2626" : "#E5E7EB" }} value={form.date} onChange={e => set("date", e.target.value)} />
+            {submitted && errors.date && <p style={{ margin:"4px 0 0", fontSize:11, color:"#DC2626" }}>Campo requerido</p>}
           </div>
           <div style={{ display:"flex", gap:10 }}>
             <div style={{ flex:1 }}>
@@ -155,8 +179,8 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
         </div>
         {/* Footer */}
         <div style={{ padding:"16px 24px", borderTop:"1px solid #F3F4F6", display:"flex", justifyContent:"flex-end", gap:10 }}>
-          <button onClick={onCancel} style={{ padding:"9px 18px", borderRadius:8, border:"1px solid #E5E7EB", background:"#fff", color:"#374151", fontSize:13, cursor:"pointer", fontWeight:500 }}>Cancelar</button>
-          <button onClick={() => { if(!form.description||!form.date||!form.projectId||!form.phase) return; onSave({...form, id:form.id||generateId()}); }}
+          <button onClick={handleCancel} style={{ padding:"9px 18px", borderRadius:8, border:"1px solid #E5E7EB", background:"#fff", color:"#374151", fontSize:13, cursor:"pointer", fontWeight:500 }}>Cancelar</button>
+          <button onClick={handleSave}
             style={{ padding:"9px 20px", borderRadius:8, border:"none", background:"#1B4332", color:"#fff", fontSize:13, cursor:"pointer", fontWeight:600 }}>Guardar</button>
         </div>
       </div>
