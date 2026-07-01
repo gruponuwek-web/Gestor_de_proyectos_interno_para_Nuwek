@@ -53,8 +53,13 @@ export function useActivities() {
   const excludeOccurrence = async (id, date) => {
     const act = activities.find(a => a.id === id);
     if (!act) return;
-    const updated_act = { ...act, excludeDates: [...(act.excludeDates || []), date] };
-    await saveActivity(updated_act);
+    await saveActivity({ ...act, excludeDates: [...(act.excludeDates || []), date] });
+  };
+
+  const completeOccurrence = async (id, date) => {
+    const act = activities.find(a => a.id === id);
+    if (!act) return;
+    await saveActivity({ ...act, completedDates: [...(act.completedDates || []), date] });
   };
 
   const updateStatus = async (id, newStatus) => {
@@ -63,5 +68,5 @@ export function useActivities() {
     await saveActivity({ ...act, status: newStatus });
   };
 
-  return { activities, loading, error, saveActivity, deleteActivity, excludeOccurrence, updateStatus };
+  return { activities, loading, error, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, updateStatus };
 }

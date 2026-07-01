@@ -23,7 +23,7 @@ function fmtTime(str) {
   return str.slice(0, 5);
 }
 
-function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, onFollowUp, onDeleteOccurrence }) {
+function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, onCompleteOccurrence, onFollowUp, onDeleteOccurrence }) {
   const pr = projects.find(p=>p.id===act.projectId), pc = getPhaseColor(pr?.type, act.phase);
   const ng = (act.nuwekGuests||[]).length, cg = (act.clientGuests||[]).length;
   return (
@@ -49,8 +49,13 @@ function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, o
       <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
         <StatusBadge status={act.status} onChange={newStatus => {
           const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id;
-          onStatusChange(baseId, newStatus);
-          if(newStatus==="Completado") onFollowUp(act);
+          const isRecurring = act.recurrence && act.recurrence !== "No se repite";
+          if (newStatus === "Completado" && isRecurring) {
+            onCompleteOccurrence(baseId, act.date);
+          } else {
+            onStatusChange(baseId, newStatus);
+          }
+          if (newStatus === "Completado") onFollowUp(act);
         }} />
         <button onClick={()=>onEdit(act)} title="Editar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#374151"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>✏️</button>
         <button onClick={()=>{ const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id; onConfirmDelete({ id: baseId, name: act.description, isRecurring: act.recurrence && act.recurrence !== "No se repite", count: act.recurrenceCount || 12, occurrenceDate: act.date }); }} title="Eliminar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#DC2626"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>🗑</button>
@@ -59,7 +64,7 @@ function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, o
   );
 }
 
-function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, projects, onEdit, onConfirmDelete, onStatusChange, onFollowUp, onDeleteOccurrence }) {
+function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, projects, onEdit, onConfirmDelete, onStatusChange, onCompleteOccurrence, onFollowUp, onDeleteOccurrence }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ marginBottom:16 }}>
@@ -74,7 +79,7 @@ function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, 
         <div style={{ border:`1px solid ${accent}22`, borderTop:"none", borderRadius:"0 0 10px 10px", padding:"12px 12px 6px" }}>
           {acts.length===0
             ? <p style={{ margin:0, textAlign:"center", color:"#D1D5DB", fontSize:12, padding:"16px 0" }}>Sin actividades aquí</p>
-            : acts.map(a => <ActivityRow key={a.id} act={a} projects={projects} onEdit={onEdit} onConfirmDelete={onConfirmDelete} onStatusChange={onStatusChange} onFollowUp={onFollowUp} onDeleteOccurrence={onDeleteOccurrence} />)
+            : acts.map(a => <ActivityRow key={a.id} act={a} projects={projects} onEdit={onEdit} onConfirmDelete={onConfirmDelete} onStatusChange={onStatusChange} onCompleteOccurrence={onCompleteOccurrence} onFollowUp={onFollowUp} onDeleteOccurrence={onDeleteOccurrence} />)
           }
         </div>
       )}
@@ -82,7 +87,7 @@ function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, 
   );
 }
 
-function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDeleteOccurrence, onStatusChange }) {
+function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDeleteOccurrence, onStatusChange, onCompleteOccurrence, onSaveActivity }) {
   const [fp,setFp]=useState("todos"), [fph,setFph]=useState("Todas"), [q,setQ]=useState("");
   const [fNuwek,setFNuwek]=useState("Todos"), [fStatus,setFStatus]=useState("Todos"), [fType,setFType]=useState("Todos");
   const [followUp,setFollowUp]=useState(null);
@@ -160,11 +165,11 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
       </div>
 
       {/* Groups */}
-      <GroupSection title="Vencidas" acts={groups.overdue}  count={groups.overdue.length}  accent="#DC2626" bg="#FEF2F2" icon="⚠️" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
-      <GroupSection title="Hoy"      acts={groups.today}    count={groups.today.length}    accent="#2563EB" bg="#EFF6FF" icon="📋" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
-      <GroupSection title="Mañana"   acts={groups.tomorrow} count={groups.tomorrow.length} accent="#7C3AED" bg="#F5F3FF" icon="📅" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
-      <GroupSection title="Próximas" acts={groups.upcoming} count={groups.upcoming.length} accent="#D97706" bg="#FFFBEB" icon="🗓" defaultOpen={false} projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
-      <GroupSection title="Realizadas" acts={groups.done}   count={groups.done.length}    accent="#16A34A" bg="#F0FDF4" icon="✅" defaultOpen={false} projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
+      <GroupSection title="Vencidas" acts={groups.overdue}  count={groups.overdue.length}  accent="#DC2626" bg="#FEF2F2" icon="⚠️" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onCompleteOccurrence={onCompleteOccurrence} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
+      <GroupSection title="Hoy"      acts={groups.today}    count={groups.today.length}    accent="#2563EB" bg="#EFF6FF" icon="📋" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onCompleteOccurrence={onCompleteOccurrence} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
+      <GroupSection title="Mañana"   acts={groups.tomorrow} count={groups.tomorrow.length} accent="#7C3AED" bg="#F5F3FF" icon="📅" defaultOpen={true}  projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onCompleteOccurrence={onCompleteOccurrence} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
+      <GroupSection title="Próximas" acts={groups.upcoming} count={groups.upcoming.length} accent="#D97706" bg="#FFFBEB" icon="🗓" defaultOpen={false} projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onCompleteOccurrence={onCompleteOccurrence} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
+      <GroupSection title="Realizadas" acts={groups.done}   count={groups.done.length}    accent="#16A34A" bg="#F0FDF4" icon="✅" defaultOpen={false} projects={projects} onEdit={onEdit} onConfirmDelete={setConfirmDelete} onStatusChange={onStatusChange} onCompleteOccurrence={onCompleteOccurrence} onFollowUp={setFollowUp} onDeleteOccurrence={onDeleteOccurrence} />
 
       {confirmDelete && (
         <ConfirmDeleteModal
@@ -182,7 +187,8 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
         <FollowUpModal
           completedAct={followUp}
           onSkip={() => setFollowUp(null)}
-          onSchedule={() => { onNew({ prefill: followUp }); setFollowUp(null); }}
+          onSchedule={(nextAct) => { onNew({ fullAct: nextAct }); setFollowUp(null); }}
+          onSaveDirect={async (act) => { await onSaveActivity(act); setFollowUp(null); }}
         />
       )}
 

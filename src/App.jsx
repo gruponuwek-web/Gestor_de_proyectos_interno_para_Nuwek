@@ -52,7 +52,7 @@ export default function App() {
   const toastTimer = useRef(null);
 
   const { projects, loading: projLoading, saveProject, deleteProject } = useProjects();
-  const { activities, loading: actLoading, saveActivity, deleteActivity, excludeOccurrence, updateStatus } = useActivities();
+  const { activities, loading: actLoading, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, updateStatus } = useActivities();
 
   const loading = projLoading || actLoading;
 
@@ -80,7 +80,9 @@ export default function App() {
   };
 
   const handleNewWithPrefill = (prefillData) => {
-    if (prefillData?.prefill) {
+    if (prefillData?.fullAct) {
+      setEditAct({ ...prefillData.fullAct, id: "" });
+    } else if (prefillData?.prefill) {
       const s = prefillData.prefill;
       setEditAct({ id: "", projectId: s.projectId, phase: s.phase, description: "", clientResponsible: "", nuwekResponsible: "", clientGuests: [], nuwekGuests: [], priority: s.priority || "Media", date: todayStr(), timeStart: "", timeEnd: "", interactionType: s.interactionType || "Con cliente", modality: s.modality || "En línea", recurrence: "No se repite", recurrenceCount: 12, status: "Pendiente", notes: "", originalDate: "" });
     } else { setEditAct(null); }
@@ -166,7 +168,7 @@ export default function App() {
         {view === "dashboard"  && <Dashboard      projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "calendar"   && <CalendarView   projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "gantt"      && <GanttView      projects={projects} activities={activities} selectedProject={selectedProject} onProjectChange={setSelectedProject} />}
-        {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onStatusChange={updateStatus} />}
+        {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onSaveActivity={handleSaveAct} />}
       </div>
 
       {showForm     && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); }} />}

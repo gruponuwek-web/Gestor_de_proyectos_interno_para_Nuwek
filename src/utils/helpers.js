@@ -37,13 +37,17 @@ export function expandRecurring(act) {
   if (!act.date) return [act];
   const gap = { Semanal: 7, Quincenal: 14, Mensual: 30 }[act.recurrence] || 7;
   const count = parseInt(act.recurrenceCount) || 12;
-  const excluded = new Set(act.excludeDates || []);
+  const excluded  = new Set(act.excludeDates   || []);
+  const completed = new Set(act.completedDates || []);
+  // Para recurrentes no propagamos "Completado" del base a todas las ocurrencias
+  const baseStatus = act.status === "Completado" ? "Pendiente" : act.status;
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(act.date);
     d.setDate(d.getDate() + i * gap);
     const date = d.toISOString().split("T")[0];
     if (excluded.has(date)) return null;
-    return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0 };
+    const status = completed.has(date) ? "Completado" : baseStatus;
+    return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0, status };
   }).filter(Boolean);
 }
 
