@@ -39,14 +39,13 @@ export function expandRecurring(act) {
   const count = parseInt(act.recurrenceCount) || 12;
   const excluded  = new Set(act.excludeDates   || []);
   const completed = new Set(act.completedDates || []);
-  // Para recurrentes no propagamos "Completado" del base a todas las ocurrencias
-  const baseStatus = act.status === "Completado" ? "Pendiente" : act.status;
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(act.date);
     d.setDate(d.getDate() + i * gap);
     const date = d.toISOString().split("T")[0];
     if (excluded.has(date)) return null;
-    const status = completed.has(date) ? "Completado" : baseStatus;
+    // completedDates tiene prioridad; si no, hereda el status base
+    const status = completed.has(date) ? "Completado" : act.status;
     return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0, status };
   }).filter(Boolean);
 }
