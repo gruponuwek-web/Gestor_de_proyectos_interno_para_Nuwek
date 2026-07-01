@@ -54,18 +54,102 @@ function getPriorityColor(p) {
   return { "Alta":"#DC2626","Media":"#D97706","Baja":"#16A34A" }[p] || "#6B7280";
 }
 
-// ─── STORAGE ─────────────────────────────────────────────────────────────────
-async function loadData() {
-  try { const r = await window.storage.get("nuwek_v2"); return r ? JSON.parse(r.value) : []; } catch { return []; }
+// ─── GOOGLE SHEETS API ───────────────────────────────────────────────────────
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbz2q55bSD1qHolBc3Qrezar9oTJeODV_Qdg2Ei3OcN86xG3EI3kEgGGg5dU0xKcfV8C/exec";
+
+async function sheetsGet(entity) {
+  const res = await fetch(`${SHEETS_URL}?entity=${entity}`);
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error);
+  return json.data;
 }
+
+async function sheetsPost(entity, body) {
+  const res = await fetch(`${SHEETS_URL}?entity=${entity}&method=POST`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error);
+  return json.data;
+}
+
+async function sheetsDelete(entity, id) {
+  const res = await fetch(`${SHEETS_URL}?entity=${entity}&method=DELETE&id=${id}`);
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error);
+  return json.data;
+}
+
+// ─── STORAGE (local fallback mientras Sheets carga) ───────────────────────────
+async function loadData() {
+  try {
+    const data = await sheetsGet("actividades");
+    return Array.isArray(data) ? data : [];
+  } catch {
+    try { const r = await window.storage.get("nuwek_v2"); return r ? JSON.parse(r.value) : []; } catch { return []; }
+  }
+}
+
 async function saveData(acts) {
+  // Sheets: upsert cada actividad modificada y eliminar las borradas
+  // Por simplicidad en demo: sincronizamos el array completo
+  try {
+    for (const act of acts) { await sheetsPost("actividades", act); }
+  } catch {}
+  // Siempre guardamos local también como backup
   try { await window.storage.set("nuwek_v2", JSON.stringify(acts)); } catch {}
 }
-async function loadProjects() {
-  try { const r = await window.storage.get("nuwek_projects"); return r ? JSON.parse(r.value) : null; } catch { return null; }
+
+async function saveActivity(act) {
+  try { await sheetsPost("actividades", act); } catch {}
+  try {
+    const r = await window.storage.get("nuwek_v2");
+    const acts = r ? JSON.parse(r.value) : [];
+    const updated = acts.find(a=>a.id===act.id) ? acts.map(a=>a.id===act.id?act:a) : [...acts, act];
+    await window.storage.set("nuwek_v2", JSON.stringify(updated));
+  } catch {}
 }
+
+async function deleteActivity(id) {
+  try { await sheetsDelete("actividades", id); } catch {}
+  try {
+    const r = await window.storage.get("nuwek_v2");
+    const acts = r ? JSON.parse(r.value) : [];
+    await window.storage.set("nuwek_v2", JSON.stringify(acts.filter(a=>a.id!==id)));
+  } catch {}
+}
+
+async function loadProjects() {
+  try {
+    const data = await sheetsGet("proyectos");
+    return Array.isArray(data) && data.length > 0 ? data : null;
+  } catch {
+    try { const r = await window.storage.get("nuwek_projects"); return r ? JSON.parse(r.value) : null; } catch { return null; }
+  }
+}
+
+async function saveProject(proj) {
+  try { await sheetsPost("proyectos", proj); } catch {}
+  try {
+    const r = await window.storage.get("nuwek_projects");
+    const projs = r ? JSON.parse(r.value) : [];
+    const updated = projs.find(p=>p.id===proj.id) ? projs.map(p=>p.id===proj.id?proj:p) : [...projs, proj];
+    await window.storage.set("nuwek_projects", JSON.stringify(updated));
+  } catch {}
+}
+
+async function deleteProject(id) {
+  try { await sheetsDelete("proyectos", id); } catch {}
+  try {
+    const r = await window.storage.get("nuwek_projects");
+    const projs = r ? JSON.parse(r.value) : [];
+    await window.storage.set("nuwek_projects", JSON.stringify(projs.filter(p=>p.id!==id)));
+  } catch {}
+}
+
 async function saveProjects(projects) {
-  try { await window.storage.set("nuwek_projects", JSON.stringify(projects)); } catch {}
+  for (const p of projects) { await saveProject(p); }
 }
 
 const COLOR_OPTIONS = ["#7C3AED","#D97706","#059669","#DC2626","#0EA5E9","#EC4899","#F59E0B","#6366F1","#14B8A6","#84CC16"];
@@ -1028,22 +1112,24 @@ export default function App() {
 
   const handleSaveProject=async(proj)=>{
     const updated=projects.find(p=>p.id===proj.id)?projects.map(p=>p.id===proj.id?proj:p):[...projects,proj];
-    setProjects(updated); await saveProjects(updated); setShowProjectForm(false); setEditProj(null);
+    setProjects(updated); await saveProject(proj); setShowProjectForm(false); setEditProj(null);
   };
   const handleDeleteProject=async(id)=>{
     const updated=projects.filter(p=>p.id!==id);
-    setProjects(updated); await saveProjects(updated);
+    setProjects(updated); await deleteProject(id);
   };
 
   const handleSave=async(act)=>{
     const updated=acts.find(a=>a.id===act.id)?acts.map(a=>a.id===act.id?act:a):[...acts,act];
-    setActs(updated); await saveData(updated); setShowForm(false); setEditAct(null);
+    setActs(updated); await saveActivity(act); setShowForm(false); setEditAct(null);
   };
-  const handleDelete=async(id)=>{ const u=acts.filter(a=>a.id!==id); setActs(u); await saveData(u); };
+  const handleDelete=async(id)=>{ const u=acts.filter(a=>a.id!==id); setActs(u); await deleteActivity(id); };
   const handleEdit=(act)=>{ const b=acts.find(a=>a.id===act.id||act.id.startsWith(a.id+"_")); if(b){setEditAct(b);setShowForm(true);} };
   const handleStatusChange=async(id,newStatus)=>{
     const updated=acts.map(a=>a.id===id?{...a,status:newStatus}:a);
-    setActs(updated); await saveData(updated);
+    setActs(updated);
+    const act=updated.find(a=>a.id===id);
+    if(act) await saveActivity(act);
   };
   const handleNewWithPrefill=(prefillData)=>{
     if(prefillData?.prefill){
@@ -1055,7 +1141,14 @@ export default function App() {
 
   const nav=[{id:"proyectos",label:"Proyectos",icon:"◈"},{id:"dashboard",label:"Dashboard",icon:"◎"},{id:"calendar",label:"Calendario",icon:"▦"},{id:"gantt",label:"Gantt",icon:"≡"},{id:"activities",label:"Actividades",icon:"☰"}];
 
-  if(loading) return <div style={{minHeight:"100vh",background:"#F9FAFB",display:"flex",alignItems:"center",justifyContent:"center",color:"#1B4332",fontWeight:600}}>Cargando Nuwek PM...</div>;
+  if(loading) return (
+    <div style={{minHeight:"100vh",background:"#F9FAFB",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12}}>
+      <div style={{width:40,height:40,border:"3px solid #E5E7EB",borderTop:"3px solid #1B4332",borderRadius:"50%",animation:"spin 0.8s linear infinite"}} />
+      <p style={{color:"#1B4332",fontWeight:700,fontSize:14,margin:0}}>Sincronizando con Google Sheets...</p>
+      <p style={{color:"#9CA3AF",fontSize:12,margin:0}}>Cargando proyectos y actividades</p>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
   return (
     <div style={{ minHeight:"100vh", display:"flex", fontFamily:"'Inter',system-ui,sans-serif" }}>
