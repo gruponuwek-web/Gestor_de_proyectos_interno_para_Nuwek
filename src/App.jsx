@@ -115,7 +115,10 @@ export default function App() {
 
   const handleNewWithPrefill = (prefillData) => {
     if (prefillData?.fullAct) {
-      setEditAct({ ...prefillData.fullAct, id: "" });
+      // Si el fullAct tiene un id que ya existe en la lista, abrir en modo edición (ej. próxima ocurrencia de serie)
+      // Si el id es nuevo/vacío, limpiar para crear actividad nueva
+      const isExisting = prefillData.fullAct.id && activities.some(a => a.id === prefillData.fullAct.id);
+      setEditAct(isExisting ? prefillData.fullAct : { ...prefillData.fullAct, id: "" });
     } else if (prefillData?.prefill) {
       const s = prefillData.prefill;
       setEditAct({ id: "", projectId: s.projectId, phase: s.phase, description: "", clientResponsible: "", nuwekResponsible: "", clientGuests: [], nuwekGuests: [], priority: s.priority || "Media", date: todayStr(), timeStart: "", timeEnd: "", interactionType: s.interactionType || "Con cliente", modality: s.modality || "En línea", recurrence: "No se repite", recurrenceCount: 12, status: "Pendiente", notes: "", originalDate: "" });

@@ -104,6 +104,14 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
   const [followUp,setFollowUp]=useState(null);
   const [confirmDelete,setConfirmDelete]=useState(null);
 
+  // Siguiente ocurrencia de la serie (para el FollowUpModal)
+  const nextSeriesAct = useMemo(() => {
+    if (!followUp?.seriesId) return null;
+    return activities
+      .filter(a => a.seriesId === followUp.seriesId && a.date > followUp.date)
+      .sort((a, b) => a.date.localeCompare(b.date))[0] || null;
+  }, [followUp, activities]);
+
   const today = todayStr();
   const tmrwStr = tomorrowStr();
 
@@ -214,8 +222,9 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
       {followUp && (
         <FollowUpModal
           completedAct={followUp}
+          nextAct={nextSeriesAct}
           onSkip={() => setFollowUp(null)}
-          onSchedule={(nextAct) => { onNew({ fullAct: nextAct }); setFollowUp(null); }}
+          onSchedule={(editableAct) => { onNew({ fullAct: editableAct }); setFollowUp(null); }}
           onSaveDirect={async (act, excludeDate) => {
             const baseId = followUp.id.includes("_") ? followUp.id.split("_").slice(0,-1).join("_") : followUp.id;
             if (excludeDate) await onDeleteOccurrence(baseId, excludeDate);
