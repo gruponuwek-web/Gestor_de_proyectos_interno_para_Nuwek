@@ -62,11 +62,17 @@ export function useActivities() {
     await saveActivity({ ...act, completedDates: [...(act.completedDates || []), date] });
   };
 
+  const uncompleteOccurrence = async (id, date) => {
+    const act = activities.find(a => a.id === id);
+    if (!act) return;
+    await saveActivity({ ...act, completedDates: (act.completedDates || []).filter(d => d !== date) });
+  };
+
   const updateStatus = async (id, newStatus) => {
     const act = activities.find(a => a.id === id);
     if (!act) return;
     await saveActivity({ ...act, status: newStatus });
   };
 
-  return { activities, loading, error, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, updateStatus };
+  return { activities, loading, error, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, uncompleteOccurrence, updateStatus };
 }

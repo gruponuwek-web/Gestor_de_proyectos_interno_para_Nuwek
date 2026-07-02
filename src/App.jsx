@@ -52,7 +52,7 @@ export default function App() {
   const toastTimer = useRef(null);
 
   const { projects, loading: projLoading, saveProject, deleteProject } = useProjects();
-  const { activities, loading: actLoading, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, updateStatus } = useActivities();
+  const { activities, loading: actLoading, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, uncompleteOccurrence, updateStatus } = useActivities();
 
   const loading = projLoading || actLoading;
 
@@ -168,7 +168,7 @@ export default function App() {
         {view === "dashboard"  && <Dashboard      projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "calendar"   && <CalendarView   projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "gantt"      && <GanttView      projects={projects} activities={activities} selectedProject={selectedProject} onProjectChange={setSelectedProject} />}
-        {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onSaveActivity={handleSaveAct} />}
+        {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onUncompleteOccurrence={uncompleteOccurrence} onSaveActivity={handleSaveAct} />}
       </div>
 
       {showForm     && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); }} />}
