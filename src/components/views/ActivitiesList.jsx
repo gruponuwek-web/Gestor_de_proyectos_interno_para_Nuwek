@@ -188,7 +188,12 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
           completedAct={followUp}
           onSkip={() => setFollowUp(null)}
           onSchedule={(nextAct) => { onNew({ fullAct: nextAct }); setFollowUp(null); }}
-          onSaveDirect={async (act) => { await onSaveActivity(act); setFollowUp(null); }}
+          onSaveDirect={async (act, excludeDate) => {
+            const baseId = followUp.id.includes("_") ? followUp.id.split("_").slice(0,-1).join("_") : followUp.id;
+            if (excludeDate) await onDeleteOccurrence(baseId, excludeDate);
+            await onSaveActivity(act);
+            setFollowUp(null);
+          }}
         />
       )}
 

@@ -2,10 +2,42 @@ import { useState, useMemo } from "react";
 import { DAYS_ES, MONTHS_ES } from "../../constants";
 import { expandRecurring } from "../../utils/helpers";
 
+function DayModal({ date, acts, projects, onEdit, onClose }) {
+  const label = new Date(date + "T12:00:00").toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(0,0,0,0.35)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:"#fff", borderRadius:14, width:"100%", maxWidth:400, boxShadow:"0 20px 60px rgba(0,0,0,0.15)", overflow:"hidden" }}>
+        <div style={{ padding:"14px 18px", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#111827", textTransform:"capitalize" }}>{label}</p>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, color:"#9CA3AF", cursor:"pointer", lineHeight:1 }}>×</button>
+        </div>
+        <div style={{ padding:12, maxHeight:400, overflowY:"auto" }}>
+          {acts.map(a => {
+            const pr = projects.find(p=>p.id===a.projectId);
+            return (
+              <div key={a.id} onClick={()=>{ onEdit(a); onClose(); }}
+                style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:8, marginBottom:6, cursor:"pointer", background:"#F9FAFB", border:"1px solid #F3F4F6" }}
+                onMouseEnter={e=>e.currentTarget.style.background="#F3F4F6"}
+                onMouseLeave={e=>e.currentTarget.style.background="#F9FAFB"}>
+                <div style={{ width:4, height:36, borderRadius:2, background:pr?.color||"#6B7280", flexShrink:0 }} />
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ margin:0, fontSize:13, fontWeight:600, color:"#111827", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{a.description}</p>
+                  <p style={{ margin:0, fontSize:11, color:"#9CA3AF" }}>{pr?.name}{a.timeStart?` · ${a.timeStart}${a.timeEnd?`–${a.timeEnd}`:""}`:""}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CalendarView({ projects, activities, onNewActivity, onEdit }) {
   const [cur, setCur]     = useState(new Date());
   const [fp, setFp]       = useState("todos");
   const [fNuwek, setFNuwek] = useState("Todos");
+  const [dayModal, setDayModal] = useState(null);
   const allNuwek = [...new Set(projects.flatMap(p=>p.nuwekMembers))].sort();
   const ALIVE = ["Pendiente","En progreso"]; // Completado y Reagendado fuera
   const all = useMemo(()=>activities.flatMap(expandRecurring).filter(a=>ALIVE.includes(a.status)),[activities]);
@@ -60,17 +92,17 @@ function CalendarView({ projects, activities, onNewActivity, onEdit }) {
                     </div>
                   );
                 })}
-                {da.length>3&&<div style={{fontSize:10,color:"#9CA3AF",textAlign:"center"}}>+{da.length-3} más</div>}
+                {da.length>3&&<div onClick={()=>setDayModal({date:ds(d),acts:da})} style={{fontSize:10,color:"#2563EB",textAlign:"center",cursor:"pointer",fontWeight:600,padding:"2px 0"}}>+{da.length-3} más</div>}
               </div>
             );
           })}
         </div>
       </div>
+
+      {dayModal && <DayModal date={dayModal.date} acts={dayModal.acts} projects={projects} onEdit={onEdit} onClose={()=>setDayModal(null)} />}
     </div>
   );
 }
 
-
-// ─── FOLLOW-UP MODAL ─────────────────────────────────────────────────────────
 
 export default CalendarView;
