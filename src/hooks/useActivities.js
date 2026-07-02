@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchActividades, upsertActividad, removeActividad } from "../api/sheets";
-import { localGet, localSet, KEYS, pendingAdd, pendingRemove, applyPending } from "../utils/storage";
+import { localGet, localSet, KEYS, pendingAdd, pendingRemove, applyPending, seriesMapAdd, seriesMapRemove, seriesMapGet } from "../utils/storage";
 import { normalizeDate } from "../utils/helpers";
 
 export function useActivities() {
@@ -14,7 +14,11 @@ export function useActivities() {
         const data = await fetchActividades();
         if (Array.isArray(data)) {
           const normalizeTime = v => !v ? "" : v.includes("T") ? new Date(v).toISOString().slice(11,16) : v.slice(0,5);
-          const normalized = data.map(a => ({ ...a, date: normalizeDate(a.date), originalDate: normalizeDate(a.originalDate), timeStart: normalizeTime(a.timeStart), timeEnd: normalizeTime(a.timeEnd) }));
+          const sMap = seriesMapGet();
+          const normalized = data.map(a => {
+            const entry = sMap[a.id];
+            return { ...a, date: normalizeDate(a.date), originalDate: normalizeDate(a.originalDate), timeStart: normalizeTime(a.timeStart), timeEnd: normalizeTime(a.timeEnd), ...(entry ? { seriesId: entry.seriesId, seriesCount: entry.count } : {}) };
+          });
           // Aplica cambios locales no confirmados encima de los datos de Sheets
           const merged = applyPending("activities", normalized);
           setActivities(merged);
@@ -45,6 +49,7 @@ export function useActivities() {
     const updated = activities.filter(a => a.id !== id);
     setActivities(updated);
     localSet(KEYS.ACTIVITIES, updated);
+    seriesMapRemove([id]);
     pendingAdd("activities", id, "delete");
     await removeActividad(id);
     pendingRemove("activities", id);
@@ -79,6 +84,9 @@ export function useActivities() {
     setActivities(prev => [...prev, ...acts]);
     const current = localGet(KEYS.ACTIVITIES) || [];
     localSet(KEYS.ACTIVITIES, [...current, ...acts]);
+    // Persistir mapa activityId→seriesId para sobrevivir recargas (GAS no guarda seriesId)
+    const sid = acts[0]?.seriesId;
+    if (sid) seriesMapAdd(acts.map(a => a.id), sid);
     for (const act of acts) {
       pendingAdd("activities", act.id, "upsert", act);
       await upsertActividad(act);
@@ -93,6 +101,7 @@ export function useActivities() {
     const updated = activities.filter(a => !ids.has(a.id));
     setActivities(updated);
     localSet(KEYS.ACTIVITIES, updated);
+    seriesMapRemove([...ids]);
     for (const act of toDelete) {
       pendingAdd("activities", act.id, "delete");
       await removeActividad(act.id);

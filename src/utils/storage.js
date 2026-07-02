@@ -12,10 +12,28 @@ export function localSet(key, value) {
 }
 
 export const KEYS = {
-  PROJECTS:   "nuwek_projects",
-  ACTIVITIES: "nuwek_activities",
-  PENDING:    "nuwek_pending",
+  PROJECTS:    "nuwek_projects",
+  ACTIVITIES:  "nuwek_activities",
+  PENDING:     "nuwek_pending",
+  SERIES_MAP:  "nuwek_series_map",
 };
+
+// Mapa activityId → { seriesId, count } (persiste aunque GAS no guarde seriesId)
+export function seriesMapAdd(ids, seriesId) {
+  const map = localGet(KEYS.SERIES_MAP) || {};
+  ids.forEach(id => { map[id] = { seriesId, count: ids.length }; });
+  localSet(KEYS.SERIES_MAP, map);
+}
+
+export function seriesMapRemove(ids) {
+  const map = localGet(KEYS.SERIES_MAP) || {};
+  ids.forEach(id => { delete map[id]; });
+  localSet(KEYS.SERIES_MAP, map);
+}
+
+export function seriesMapGet() {
+  return localGet(KEYS.SERIES_MAP) || {};
+}
 
 // Cambios locales no confirmados por Sheets (sobreviven a recargas)
 function getPending() {

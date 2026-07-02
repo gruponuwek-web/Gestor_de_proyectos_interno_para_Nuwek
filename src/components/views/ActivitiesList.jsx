@@ -67,8 +67,8 @@ function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, o
         <button onClick={()=>onEdit(act)} title="Editar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#374151"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>✏️</button>
         <button onClick={()=>{
           const baseId = act.id.includes("_") ? act.id.split("_").slice(0,-1).join("_") : act.id;
-          const isRecurring = act.recurrence && act.recurrence !== "No se repite";
-          onConfirmDelete({ id: act.id, baseId, name: act.description, isRecurring, seriesId: act.seriesId || null, count: act.recurrenceCount || 12, occurrenceDate: act.date });
+          const isRecurring = (act.recurrence && act.recurrence !== "No se repite") || !!act.seriesId;
+          onConfirmDelete({ id: act.id, baseId, name: act.description, isRecurring, seriesId: act.seriesId || null, count: act.seriesCount || act.recurrenceCount || 12, occurrenceDate: act.date });
         }} title="Eliminar" style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#9CA3AF",padding:4 }} onMouseEnter={e=>e.currentTarget.style.color="#DC2626"} onMouseLeave={e=>e.currentTarget.style.color="#9CA3AF"}>🗑</button>
       </div>
     </div>
