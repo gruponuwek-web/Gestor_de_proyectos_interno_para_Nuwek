@@ -35,6 +35,8 @@ function ActivityRow({ act, projects, onEdit, onConfirmDelete, onStatusChange, o
           <p style={{ margin:0, fontSize:14, fontWeight:600, color:"#111827" }}>{act.description}</p>
           {act.recurrence&&act.recurrence!=="No se repite"&&
             <span style={{ background:"#F5F3FF",color:"#7C3AED",borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:600 }}>↻ {act.recurrence}</span>}
+          {act.occurrenceIndex&&
+            <span style={{ background:"#EDE9FE",color:"#5B21B6",borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:700 }}>#{act.occurrenceIndex}</span>}
         </div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:"4px 12px", fontSize:12, color:"#9CA3AF" }}>
           <span style={{color:pr?.color||"#6B7280",fontWeight:600}}>{pr?.name}</span>

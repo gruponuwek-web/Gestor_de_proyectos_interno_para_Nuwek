@@ -47,7 +47,7 @@ export function expandRecurring(act) {
     // completedDates marca la ocurrencia; el status base "Completado" no debe heredarse a todas las ocurrencias
     const baseStatus = act.status === "Completado" ? "Pendiente" : act.status;
     const status = completed.has(date) ? "Completado" : baseStatus;
-    return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0, status };
+    return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0, status, occurrenceIndex: i + 1 };
   }).filter(Boolean);
 }
 
