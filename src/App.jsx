@@ -49,10 +49,11 @@ export default function App() {
   const [editAct,         setEditAct]         = useState(null);
   const [editProj,        setEditProj]        = useState(null);
   const [toast,           setToast]           = useState({ message: "", type: "" });
+  const [editOccurrence,  setEditOccurrence]  = useState(null); // {baseId, date} cuando se edita una ocurrencia recurrente
   const toastTimer = useRef(null);
 
   const { projects, loading: projLoading, saveProject, deleteProject } = useProjects();
-  const { activities, loading: actLoading, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, uncompleteOccurrence, updateStatus } = useActivities();
+  const { activities, loading: actLoading, saveActivity, saveActivitiesBatch, deleteActivity, deleteSeriesOccurrences, excludeOccurrence, completeOccurrence, uncompleteOccurrence, updateStatus } = useActivities();
 
   const loading = projLoading || actLoading;
 
@@ -64,19 +65,52 @@ export default function App() {
 
   const handleSaveAct = async (act) => {
     const isNew = !act.id;
+    const isRecurring = act.recurrence && act.recurrence !== "No se repite";
     showToast("Guardando en Sheets...", "saving", 60000);
     try {
-      await saveActivity({ ...act, id: act.id || generateId() });
-      showToast(isNew ? "Actividad creada" : "Actividad actualizada", "success");
+      if (isNew && isRecurring) {
+        // Nuevo modelo: crear N registros independientes (uno por ocurrencia)
+        const GAPS = { Semanal: 7, Quincenal: 14, Mensual: 30 };
+        const gap   = GAPS[act.recurrence] || 7;
+        const count = parseInt(act.recurrenceCount) || 12;
+        const seriesId = generateId();
+        const occurrences = Array.from({ length: count }, (_, i) => {
+          const d = new Date(act.date + "T12:00:00");
+          d.setDate(d.getDate() + i * gap);
+          return { ...act, id: generateId(), date: d.toISOString().split("T")[0], seriesId, occurrenceIndex: i + 1, status: "Pendiente" };
+        });
+        await saveActivitiesBatch(occurrences);
+        showToast(`${count} sesiones agendadas`, "success");
+      } else {
+        let actToSave = { ...act, id: act.id || generateId() };
+        // Compatibilidad con actividades antiguas (sin seriesId): completar ocurrencia específica
+        if (!isNew && isRecurring && !act.seriesId && act.status === "Completado" && editOccurrence?.baseId === act.id) {
+          const baseAct = activities.find(a => a.id === act.id);
+          const existing = baseAct?.completedDates || [];
+          actToSave = {
+            ...actToSave,
+            status: baseAct?.status || "Pendiente",
+            completedDates: existing.includes(editOccurrence.date) ? existing : [...existing, editOccurrence.date],
+          };
+        }
+        await saveActivity(actToSave);
+        showToast(isNew ? "Actividad creada" : "Actividad actualizada", "success");
+      }
     } catch {
       showToast("Guardado local · Error al sincronizar con Sheets", "error");
     }
-    setTimeout(() => { setShowForm(false); setEditAct(null); }, 300);
+    setTimeout(() => { setShowForm(false); setEditAct(null); setEditOccurrence(null); }, 300);
   };
 
   const handleEditAct = (act) => {
     const base = activities.find(a => a.id === act.id || act.id?.startsWith(a.id + "_"));
-    if (base) { setEditAct(base); setShowForm(true); }
+    if (base) {
+      const isOccurrence = act.id !== base.id;
+      const isRecurring = base.recurrence && base.recurrence !== "No se repite";
+      setEditOccurrence(isOccurrence && isRecurring ? { baseId: base.id, date: act.date } : null);
+      setEditAct(base);
+      setShowForm(true);
+    }
   };
 
   const handleNewWithPrefill = (prefillData) => {
@@ -168,10 +202,10 @@ export default function App() {
         {view === "dashboard"  && <Dashboard      projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "calendar"   && <CalendarView   projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "gantt"      && <GanttView      projects={projects} activities={activities} selectedProject={selectedProject} onProjectChange={setSelectedProject} />}
-        {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onUncompleteOccurrence={uncompleteOccurrence} onSaveActivity={handleSaveAct} />}
+        {view === "activities" && <ActivitiesList projects={projects} activities={activities} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onDeleteSeries={deleteSeriesOccurrences} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onUncompleteOccurrence={uncompleteOccurrence} onSaveActivity={handleSaveAct} />}
       </div>
 
-      {showForm     && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); }} />}
+      {showForm     && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); setEditOccurrence(null); }} />}
       {showProjForm && <ProjectForm  editProject={editProj} onSave={handleSaveProj} onCancel={() => { setShowProjForm(false); setEditProj(null); }} />}
 
       <Toast message={toast.message} type={toast.type} />

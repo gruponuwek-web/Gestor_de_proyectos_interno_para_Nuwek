@@ -74,5 +74,31 @@ export function useActivities() {
     await saveActivity({ ...act, status: newStatus });
   };
 
-  return { activities, loading, error, saveActivity, deleteActivity, excludeOccurrence, completeOccurrence, uncompleteOccurrence, updateStatus };
+  // Crea N registros individuales para una serie recurrente (nuevo modelo)
+  const saveActivitiesBatch = async (acts) => {
+    setActivities(prev => [...prev, ...acts]);
+    const current = localGet(KEYS.ACTIVITIES) || [];
+    localSet(KEYS.ACTIVITIES, [...current, ...acts]);
+    for (const act of acts) {
+      pendingAdd("activities", act.id, "upsert", act);
+      await upsertActividad(act);
+      pendingRemove("activities", act.id);
+    }
+  };
+
+  // Elimina todas las ocurrencias de una serie por seriesId
+  const deleteSeriesOccurrences = async (seriesId) => {
+    const toDelete = activities.filter(a => a.seriesId === seriesId);
+    const ids = new Set(toDelete.map(a => a.id));
+    const updated = activities.filter(a => !ids.has(a.id));
+    setActivities(updated);
+    localSet(KEYS.ACTIVITIES, updated);
+    for (const act of toDelete) {
+      pendingAdd("activities", act.id, "delete");
+      await removeActividad(act.id);
+      pendingRemove("activities", act.id);
+    }
+  };
+
+  return { activities, loading, error, saveActivity, saveActivitiesBatch, deleteActivity, deleteSeriesOccurrences, excludeOccurrence, completeOccurrence, uncompleteOccurrence, updateStatus };
 }

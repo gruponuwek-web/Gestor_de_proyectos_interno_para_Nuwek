@@ -35,6 +35,7 @@ export function tomorrowStr() {
 export function expandRecurring(act) {
   if (!act.recurrence || act.recurrence === "No se repite") return [act];
   if (!act.date) return [act];
+  if (act.seriesId) return [act]; // Ocurrencia individual de serie nueva → ya es su propio registro
   const gap = { Semanal: 7, Quincenal: 14, Mensual: 30 }[act.recurrence] || 7;
   const count = parseInt(act.recurrenceCount) || 12;
   const excluded  = new Set(act.excludeDates   || []);
