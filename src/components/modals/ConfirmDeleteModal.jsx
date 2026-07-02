@@ -40,7 +40,7 @@ export default function ConfirmDeleteModal({ activityName, isRecurring, recurren
           )}
           <button onClick={onConfirm}
             style={{ padding:"9px 18px", borderRadius:8, fontSize:13, cursor:"pointer", background:"#DC2626", color:"#fff", border:"none", fontWeight:700, fontFamily:"inherit" }}>
-            {isRecurring ? "Todas las ocurrencias" : "Sí, eliminar"}
+            {isRecurring ? "Todas las actividades" : "Sí, eliminar"}
           </button>
         </div>
 
