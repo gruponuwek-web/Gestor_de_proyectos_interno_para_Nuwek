@@ -44,8 +44,9 @@ export function expandRecurring(act) {
     d.setDate(d.getDate() + i * gap);
     const date = d.toISOString().split("T")[0];
     if (excluded.has(date)) return null;
-    // completedDates tiene prioridad; si no, hereda el status base
-    const status = completed.has(date) ? "Completado" : act.status;
+    // completedDates marca la ocurrencia; el status base "Completado" no debe heredarse a todas las ocurrencias
+    const baseStatus = act.status === "Completado" ? "Pendiente" : act.status;
+    const status = completed.has(date) ? "Completado" : baseStatus;
     return { ...act, id: `${act.id}_${i}`, date, isChild: i > 0, status };
   }).filter(Boolean);
 }
