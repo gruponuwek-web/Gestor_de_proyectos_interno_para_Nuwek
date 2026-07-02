@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { PRIORITIES, STATUSES, MODALITIES, INTERACTION_TYPES, RECURRENCE_OPTIONS } from "../../constants";
-import { getPhasesForType, getStatusColor, getStatusBg, todayStr, generateId } from "../../utils/helpers";
+import { getPhasesForType, getStatusColor, getStatusBg, todayStr } from "../../utils/helpers";
 import MultiSelect from "../ui/MultiSelect";
 
 function ActivityForm({ projects, editActivity, onSave, onCancel }) {
@@ -36,7 +36,7 @@ function ActivityForm({ projects, editActivity, onSave, onCancel }) {
   const handleSave = () => {
     setSubmitted(true);
     if (hasErrors) return;
-    onSave({...form, id: form.id || generateId()});
+    onSave(form);
   };
 
   useEffect(() => {

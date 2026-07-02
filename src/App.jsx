@@ -49,7 +49,7 @@ export default function App() {
   const [editAct,         setEditAct]         = useState(null);
   const [editProj,        setEditProj]        = useState(null);
   const [toast,           setToast]           = useState({ message: "", type: "" });
-  const [editOccurrence,  setEditOccurrence]  = useState(null); // {baseId, date} cuando se edita una ocurrencia recurrente
+  const [editOccurrence,  setEditOccurrence]  = useState(null);
   const toastTimer = useRef(null);
 
   const { projects, loading: projLoading, saveProject, deleteProject } = useProjects();
@@ -77,7 +77,7 @@ export default function App() {
         const occurrences = Array.from({ length: count }, (_, i) => {
           const d = new Date(act.date + "T12:00:00");
           d.setDate(d.getDate() + i * gap);
-          return { ...act, id: generateId(), date: d.toISOString().split("T")[0], seriesId, occurrenceIndex: i + 1, status: "Pendiente" };
+          return { ...act, id: generateId(), date: d.toISOString().split("T")[0], seriesId, occurrenceIndex: i + 1, status: "Pendiente", recurrence: "No se repite", recurrenceCount: 1 };
         });
         await saveActivitiesBatch(occurrences);
         showToast(`${count} sesiones agendadas`, "success");
