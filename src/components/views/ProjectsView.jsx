@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getPhasesForType } from "../../utils/helpers";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
-function ProjectsView({ projects, activities, onAdd, onEdit, onDelete, onGoGantt }) {
+function ProjectsView({ projects, activities, onAdd, onEdit, onDelete, onGoGantt, onGoActivities }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const STATUS_COLOR = { "Activo":"#16A34A","En pausa":"#D97706","Completado":"#6B7280" };
   const STATUS_BG    = { "Activo":"#F0FDF4","En pausa":"#FFFBEB","Completado":"#F9FAFB" };
@@ -27,7 +27,9 @@ function ProjectsView({ projects, activities, onAdd, onEdit, onDelete, onGoGantt
             : null;
 
           return (
-            <div key={proj.id} style={{background:"#fff",borderRadius:14,border:"1px solid #F3F4F6",boxShadow:"0 1px 4px rgba(0,0,0,0.05)",overflow:"hidden"}}>
+            <div key={proj.id} onClick={()=>onGoActivities(proj.id)} style={{background:"#fff",borderRadius:14,border:"1px solid #F3F4F6",boxShadow:"0 1px 4px rgba(0,0,0,0.05)",overflow:"hidden",cursor:"pointer"}}
+              onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.1)"}
+              onMouseLeave={e=>e.currentTarget.style.boxShadow="0 1px 4px rgba(0,0,0,0.05)"}>
               {/* Color bar */}
               <div style={{height:5,background:proj.color}} />
               <div style={{padding:20}}>
@@ -106,7 +108,7 @@ function ProjectsView({ projects, activities, onAdd, onEdit, onDelete, onGoGantt
                 </div>
 
                 {/* Actions */}
-                <div style={{display:"flex",gap:8,borderTop:"1px solid #F9FAFB",paddingTop:14}}>
+                <div onClick={e=>e.stopPropagation()} style={{display:"flex",gap:8,borderTop:"1px solid #F9FAFB",paddingTop:14}}>
                   <button onClick={()=>onGoGantt(proj.id)} style={{flex:1,padding:"8px 0",background:"#F9FAFB",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,color:"#374151",cursor:"pointer"}}>Ver Gantt</button>
                   <button onClick={()=>onEdit(proj)} style={{flex:1,padding:"8px 0",background:"#F9FAFB",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,color:"#374151",cursor:"pointer"}}>✏️ Editar</button>
                   <button onClick={()=>setConfirmDelete({ id: proj.id, name: proj.name })} style={{padding:"8px 12px",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,fontSize:12,fontWeight:600,color:"#DC2626",cursor:"pointer"}}>🗑</button>

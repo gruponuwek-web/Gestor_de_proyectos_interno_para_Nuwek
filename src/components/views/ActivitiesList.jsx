@@ -98,8 +98,8 @@ function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, 
   );
 }
 
-function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDeleteOccurrence, onDeleteSeries, onStatusChange, onCompleteOccurrence, onUncompleteOccurrence, onSaveActivity }) {
-  const [fp,setFp]=useState("todos"), [fph,setFph]=useState("Todas"), [q,setQ]=useState("");
+function ActivitiesList({ projects, activities, defaultProject, onNew, onEdit, onDelete, onDeleteOccurrence, onDeleteSeries, onStatusChange, onCompleteOccurrence, onUncompleteOccurrence, onSaveActivity }) {
+  const [fp,setFp]=useState(defaultProject||"todos"), [fph,setFph]=useState("Todas"), [q,setQ]=useState("");
   const [fNuwek,setFNuwek]=useState("Todos"), [fStatus,setFStatus]=useState("Todos"), [fType,setFType]=useState("Todos");
   const [followUp,setFollowUp]=useState(null);
   const [confirmDelete,setConfirmDelete]=useState(null);
@@ -148,17 +148,21 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
     <div style={{ padding:32, background:"#F9FAFB", minHeight:"100vh" }}>
       {/* Toolbar row 1 */}
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12, flexWrap:"wrap" }}>
-        <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827", flex:1 }}>Actividades</h1>
+        <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827", flex:1 }}>
+          Actividades{defaultProject ? <span style={{ color:"#9CA3AF", fontWeight:500 }}> · {projects.find(p=>p.id===defaultProject)?.name}</span> : ""}
+        </h1>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar..." style={{ ...selStyle, width:150 }} />
         <button onClick={()=>onNew({})} style={{ padding:"10px 20px",background:"#1B4332",color:"#fff",border:"none",borderRadius:9,fontWeight:700,fontSize:13,cursor:"pointer" }}>+ Actividad</button>
       </div>
       {/* Toolbar row 2 - filters */}
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24, flexWrap:"wrap" }}>
         <span style={{fontSize:12,color:"#9CA3AF",fontWeight:600,marginRight:4}}>Filtros:</span>
-        <select style={selStyle} value={fp} onChange={e=>{setFp(e.target.value);setFph("Todas");}}>
-          <option value="todos">Todos los proyectos</option>
-          {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        {!defaultProject && (
+          <select style={selStyle} value={fp} onChange={e=>{setFp(e.target.value);setFph("Todas");}}>
+            <option value="todos">Todos los proyectos</option>
+            {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
         {sp&&<select style={selStyle} value={fph} onChange={e=>setFph(e.target.value)}>
           <option>Todas las fases</option>{phases.map(ph=><option key={ph}>{ph}</option>)}
         </select>}
@@ -175,8 +179,8 @@ function ActivitiesList({ projects, activities, onNew, onEdit, onDelete, onDelet
           <option value="Interna">Solo internas</option>
           <option value="Con cliente">Solo con cliente</option>
         </select>
-        {(fp!=="todos"||fph!=="Todas"||fNuwek!=="Todos"||fStatus!=="Todos"||fType!=="Todos"||q)&&(
-          <button onClick={()=>{setFp("todos");setFph("Todas");setFNuwek("Todos");setFStatus("Todos");setFType("Todos");setQ("");}}
+        {((!defaultProject&&fp!=="todos")||fph!=="Todas"||fNuwek!=="Todos"||fStatus!=="Todos"||fType!=="Todos"||q)&&(
+          <button onClick={()=>{setFp(defaultProject||"todos");setFph("Todas");setFNuwek("Todos");setFStatus("Todos");setFType("Todos");setQ("");}}
             style={{padding:"8px 12px",background:"#FEF2F2",color:"#DC2626",border:"1px solid #FECACA",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer"}}>
             ✕ Limpiar
           </button>

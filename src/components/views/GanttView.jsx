@@ -31,10 +31,14 @@ function GanttView({ projects, activities, selectedProject, onProjectChange }) {
   return (
     <div style={{ padding:32, background:"#F9FAFB", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24, flexWrap:"wrap" }}>
-        <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827", flex:1 }}>Gantt</h1>
-        <select style={selStyle} value={pid} onChange={e=>setPid(e.target.value)}>
-          {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827", flex:1 }}>
+          Gantt{proj ? <span style={{ color:"#9CA3AF", fontWeight:500 }}> · {proj.name}</span> : ""}
+        </h1>
+        {!selectedProject && (
+          <select style={selStyle} value={pid} onChange={e=>setPid(e.target.value)}>
+            {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
         <select style={selStyle} value={fPhase} onChange={e=>setFP(e.target.value)}>
           <option>Todas</option>{phases.map(p=><option key={p.name}>{p.name}</option>)}
         </select>

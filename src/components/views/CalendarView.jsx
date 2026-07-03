@@ -33,9 +33,9 @@ function DayModal({ date, acts, projects, onEdit, onClose }) {
   );
 }
 
-function CalendarView({ projects, activities, onNewActivity, onEdit }) {
+function CalendarView({ projects, activities, onNewActivity, onEdit, selectedProject }) {
   const [cur, setCur]     = useState(new Date());
-  const [fp, setFp]       = useState("todos");
+  const [fp, setFp]       = useState(selectedProject || "todos");
   const [fNuwek, setFNuwek] = useState("Todos");
   const [dayModal, setDayModal] = useState(null);
   const allNuwek = [...new Set(projects.flatMap(p=>p.nuwekMembers))].sort();
@@ -56,11 +56,15 @@ function CalendarView({ projects, activities, onNewActivity, onEdit }) {
   return (
     <div style={{ padding:32, background:"#F9FAFB", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24, flexWrap:"wrap" }}>
-        <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827", flex:1 }}>Calendario</h1>
-        <select style={selStyle} value={fp} onChange={e=>setFp(e.target.value)}>
-          <option value="todos">Todos los proyectos</option>
-          {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827", flex:1 }}>
+          Calendario{selectedProject ? <span style={{ color:"#9CA3AF", fontWeight:500 }}> · {projects.find(p=>p.id===selectedProject)?.name}</span> : ""}
+        </h1>
+        {!selectedProject && (
+          <select style={selStyle} value={fp} onChange={e=>setFp(e.target.value)}>
+            <option value="todos">Todos los proyectos</option>
+            {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
         <select style={selStyle} value={fNuwek} onChange={e=>setFNuwek(e.target.value)}>
           <option value="Todos">Equipo Nuwek</option>
           {allNuwek.map(m=><option key={m}>{m}</option>)}
