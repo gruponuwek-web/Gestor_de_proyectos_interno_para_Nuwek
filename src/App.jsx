@@ -280,7 +280,7 @@ export default function App() {
         {view === "proyectos"  && <ProjectsView   projects={projects} activities={activities} onAdd={() => { setEditProj(null); setShowProjForm(true); }} onEdit={p => { setEditProj(p); setShowProjForm(true); }} onDelete={deleteProject} onGoGantt={id => goProjectView(id, "gantt")} onGoActivities={id => goProjectView(id, "activities")} />}
         {view === "dashboard"  && <Dashboard      projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} onGoActivities={id => goProjectView(id, "activities")} />}
         {view === "calendar"   && <CalendarView   key={selectedProject} projects={projects} activities={activities} selectedProject={selectedProject} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
-        {view === "gantt"      && <GanttView      projects={projects} activities={activities} selectedProject={selectedProject} onProjectChange={id => goProjectView(id, "gantt")} />}
+        {view === "gantt"      && <GanttView      projects={projects} activities={activities} selectedProject={selectedProject} onProjectChange={id => goProjectView(id, "gantt")} onEdit={handleEditAct} />}
         {view === "activities" && <ActivitiesList key={selectedProject} projects={projects} activities={activities} defaultProject={selectedProject} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onDeleteSeries={deleteSeriesOccurrences} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onUncompleteOccurrence={uncompleteOccurrence} onSaveActivity={handleSaveAct} />}
       </div>
 

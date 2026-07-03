@@ -244,8 +244,8 @@ function CalendarView({ projects, activities, onNewActivity, onEdit, selectedPro
           <div style={{ display:"grid", gridTemplateColumns:"52px repeat(6,1fr)", borderBottom:"1px solid #E5E7EB", background:"#FAFAFA" }}>
             <div style={{ borderRight:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"flex-end", paddingRight:6, fontSize:9, color:"#9CA3AF", paddingTop:4, paddingBottom:4 }}>todo el día</div>
             {weekDays.map((d, di) => {
-              const iso      = d.toISOString().split("T")[0];
-              const adActs   = weekActsByDay[di].filter(a => !a.timeStart);
+              const iso    = d.toISOString().split("T")[0];
+              const adActs = weekActsByDay[di].filter(a => !a.timeStart);
               const MAX_SHOW = 3;
               return (
                 <div key={di} style={{ borderRight:di<5?"1px solid #F3F4F6":"none", padding:"3px 3px", minHeight:28 }}>

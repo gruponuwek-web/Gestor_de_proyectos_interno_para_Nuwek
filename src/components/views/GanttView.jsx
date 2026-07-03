@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { STATUSES } from "../../constants";
 import { getPhasesForType, getPhaseColor, getStatusColor } from "../../utils/helpers";
 
-function GanttView({ projects, activities, selectedProject, onProjectChange }) {
+function GanttView({ projects, activities, selectedProject, onProjectChange, onEdit }) {
   const [pid, setPid_]  = useState(selectedProject || projects[0]?.id||"");
   const [fPhase, setFP] = useState("Todas");
   const [fStat, setFS]  = useState("Todos");
@@ -64,7 +64,9 @@ function GanttView({ projects, activities, selectedProject, onProjectChange }) {
               const o=off(act.date), pc=getPhaseColor(proj?.type,act.phase);
               return(
                 <div key={act.id} style={{display:"flex",borderBottom:"1px solid #F9FAFB"}}>
-                  <div style={{width:280,flexShrink:0,padding:"10px 16px",borderRight:"1px solid #F3F4F6"}}>
+                  <div onClick={()=>onEdit&&onEdit(act)} style={{width:280,flexShrink:0,padding:"10px 16px",borderRight:"1px solid #F3F4F6",cursor:"pointer"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="#F9FAFB"}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                     <p style={{margin:0,fontSize:12,fontWeight:500,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{act.description}</p>
                     <p style={{margin:0,fontSize:11,color:pc}}>{act.phase} · <span style={{color:getStatusColor(act.status)}}>{act.status}</span></p>
                   </div>
