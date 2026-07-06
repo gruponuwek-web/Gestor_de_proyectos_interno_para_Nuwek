@@ -98,9 +98,9 @@ function GroupSection({ title, acts, count, accent, bg, icon, defaultOpen=true, 
   );
 }
 
-function ActivitiesList({ projects, activities, defaultProject, onNew, onEdit, onDelete, onDeleteOccurrence, onDeleteSeries, onStatusChange, onCompleteOccurrence, onUncompleteOccurrence, onSaveActivity }) {
+function ActivitiesList({ projects, activities, defaultProject, defaultNuwek, onNew, onEdit, onDelete, onDeleteOccurrence, onDeleteSeries, onStatusChange, onCompleteOccurrence, onUncompleteOccurrence, onSaveActivity }) {
   const [fp,setFp]=useState(defaultProject||"todos"), [fph,setFph]=useState("Todas"), [q,setQ]=useState("");
-  const [fNuwek,setFNuwek]=useState("Todos"), [fStatus,setFStatus]=useState("Todos"), [fType,setFType]=useState("Todos");
+  const [fNuwek,setFNuwek]=useState(defaultNuwek||"Todos"), [fStatus,setFStatus]=useState("Todos"), [fType,setFType]=useState("Todos");
   const [followUp,setFollowUp]=useState(null);
   const [confirmDelete,setConfirmDelete]=useState(null);
 

@@ -8,8 +8,9 @@ import ProjectForm    from "./components/forms/ProjectForm";
 import Dashboard      from "./components/views/Dashboard";
 import CalendarView   from "./components/views/CalendarView";
 import GanttView      from "./components/views/GanttView";
-import ActivitiesList from "./components/views/ActivitiesList";
-import ProjectsView   from "./components/views/ProjectsView";
+import ActivitiesList   from "./components/views/ActivitiesList";
+import ProjectsView     from "./components/views/ProjectsView";
+import AssignmentsView  from "./components/views/AssignmentsView";
 
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 function Toast({ message, type }) {
@@ -41,7 +42,8 @@ export default function App() {
   const [editAct,         setEditAct]         = useState(null);
   const [editProj,        setEditProj]        = useState(null);
   const [toast,           setToast]           = useState({ message: "", type: "" });
-  const [editOccurrence,  setEditOccurrence]  = useState(null);
+  const [editOccurrence,    setEditOccurrence]    = useState(null);
+  const [assignPersonFilter, setAssignPersonFilter] = useState("Todos");
   const toastTimer = useRef(null);
 
   // Proyectos expandidos en el sidebar (persistido en localStorage)
@@ -74,9 +76,11 @@ export default function App() {
   };
 
   // Navega a una subvista de proyecto (abre el proyecto si estaba colapsado)
-  const goProjectView = (projectId, viewName) => {
+  const goProjectView = (projectId, viewName, personFilter) => {
     setSelectedProject(projectId);
     setView(viewName);
+    if (personFilter !== undefined) setAssignPersonFilter(personFilter);
+    else if (viewName === "activities") setAssignPersonFilter("Todos");
     setExpandedProjects(() => {
       const next = new Set([projectId]);
       try { localStorage.setItem("nuwek_expanded_projs", JSON.stringify([...next])); } catch {}
@@ -88,6 +92,7 @@ export default function App() {
   const goGlobalView = (viewName) => {
     setSelectedProject("");
     setView(viewName);
+    setAssignPersonFilter("Todos");
   };
 
   const handleSaveAct = async (act) => {
@@ -176,10 +181,11 @@ export default function App() {
     { id: "gantt",      label: "Gantt",       icon: "≡" },
   ];
   const globalViews = [
-    { id: "proyectos", label: "Proyectos",   icon: "◈" },
-    { id: "dashboard", label: "Dashboard",   icon: "◎" },
-    { id: "calendar",  label: "Calendario",  icon: "▦" },
-    { id: "activities",label: "Actividades", icon: "☰" },
+    { id: "proyectos",    label: "Proyectos",    icon: "◈" },
+    { id: "dashboard",    label: "Dashboard",    icon: "◎" },
+    { id: "calendar",     label: "Calendario",   icon: "▦" },
+    { id: "activities",   label: "Actividades",  icon: "☰" },
+    { id: "assignments",  label: "Asignaciones", icon: "⊞" },
   ];
   const isProjectSubView = selectedProject && ["calendar","gantt","activities"].includes(view);
   const isGlobalActive = (id) => !selectedProject && view === id;
@@ -277,11 +283,12 @@ export default function App() {
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
       <div style={{ flex: 1, overflowY: "auto" }}>
+        {view === "assignments" && <AssignmentsView projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onGoActivities={(projectId, person) => goProjectView(projectId, "activities", person)} />}
         {view === "proyectos"  && <ProjectsView   projects={projects} activities={activities} onAdd={() => { setEditProj(null); setShowProjForm(true); }} onEdit={p => { setEditProj(p); setShowProjForm(true); }} onDelete={deleteProject} onGoGantt={id => goProjectView(id, "gantt")} onGoActivities={id => goProjectView(id, "activities")} />}
         {view === "dashboard"  && <Dashboard      projects={projects} activities={activities} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} onGoActivities={id => goProjectView(id, "activities")} />}
         {view === "calendar"   && <CalendarView   key={selectedProject} projects={projects} activities={activities} selectedProject={selectedProject} onNewActivity={() => { setEditAct(null); setShowForm(true); }} onEdit={handleEditAct} />}
         {view === "gantt"      && <GanttView      projects={projects} activities={activities} selectedProject={selectedProject} onProjectChange={id => goProjectView(id, "gantt")} onEdit={handleEditAct} />}
-        {view === "activities" && <ActivitiesList key={selectedProject} projects={projects} activities={activities} defaultProject={selectedProject} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onDeleteSeries={deleteSeriesOccurrences} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onUncompleteOccurrence={uncompleteOccurrence} onSaveActivity={handleSaveAct} />}
+        {view === "activities" && <ActivitiesList key={`${selectedProject}-${assignPersonFilter}`} projects={projects} activities={activities} defaultProject={selectedProject} defaultNuwek={assignPersonFilter} onNew={handleNewWithPrefill} onEdit={handleEditAct} onDelete={deleteActivity} onDeleteOccurrence={excludeOccurrence} onDeleteSeries={deleteSeriesOccurrences} onStatusChange={updateStatus} onCompleteOccurrence={completeOccurrence} onUncompleteOccurrence={uncompleteOccurrence} onSaveActivity={handleSaveAct} />}
       </div>
 
       {showForm     && <ActivityForm projects={projects} editActivity={editAct} onSave={handleSaveAct} onCancel={() => { setShowForm(false); setEditAct(null); setEditOccurrence(null); }} />}
